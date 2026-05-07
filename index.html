@@ -1,0 +1,2578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CrossFit Barnsley — CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#e63329', dark: '#b5271f', light: '#fde8e7' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .nav-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors; }
+    .nav-link.active { @apply bg-brand text-white; }
+    .nav-link:not(.active) { @apply text-gray-600 hover:bg-gray-100; }
+    .badge { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium; }
+    .btn  { @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors; }
+    .btn-primary { @apply btn bg-brand text-white hover:bg-brand-dark; }
+    .btn-ghost   { @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50; }
+    .input  { @apply block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent; }
+    .select { @apply block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white; }
+    .card   { @apply bg-white rounded-xl border border-gray-200 shadow-sm; }
+    .table-row { @apply border-b border-gray-100 hover:bg-gray-50 transition-colors; }
+    .modal-backdrop { @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4; }
+    .modal          { @apply bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto; }
+    .btn-view-lead  { transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
+    .btn-view-lead.card-pressed { transform: scale(0.97); box-shadow: 0 0 0 3px #3b82f6; background-color: #eff6ff; }
+    #lead-drawer   { transition: transform 0.25s ease; }
+    #lead-drawer.drawer-open { transform: translateX(0) !important; }
+    #drawer-backdrop.drawer-open { opacity: 1 !important; pointer-events: auto !important; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+<!-- ═══════════════════════════════════════════════════════ LAYOUT ═══ -->
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar backdrop (mobile only) -->
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-20 hidden"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 fixed md:relative h-full z-30 transition-transform duration-200 -translate-x-full md:translate-x-0">
+    <div class="px-4 py-5 border-b border-gray-100">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl font-black text-brand">CFB</span>
+        <div class="text-xs leading-tight text-gray-500">CrossFit<br>Barnsley</div>
+      </div>
+    </div>
+
+    <nav class="flex-1 p-3 space-y-1" id="sidebar-nav">
+      <a href="#" class="nav-link active" data-page="dashboard">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="nav-link" data-page="members">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Members
+      </a>
+      <a href="#" class="nav-link" data-page="leads">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span class="flex-1">Leads</span>
+        <span id="leads-overdue-badge" class="hidden text-xs font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center leading-none"></span>
+      </a>
+      <a href="#" class="nav-link" data-page="checkins">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Check-ins
+      </a>
+    </nav>
+
+    <div class="p-3 border-t border-gray-100 space-y-1">
+      <button id="btn-open-settings" class="nav-link w-full text-gray-500 hover:bg-gray-100">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Settings & Backup
+      </button>
+      <div class="text-xs text-gray-400 text-center pt-1">Tony &amp; Lee · Barnsley</div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-y-auto md:ml-0">
+    <!-- Mobile top bar -->
+    <div class="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-10">
+      <button id="btn-mobile-menu" class="text-gray-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <span class="font-black text-brand text-lg">CFB</span>
+      <span class="text-xs text-gray-500">CrossFit Barnsley</span>
+      <div class="ml-auto">
+        <span id="leads-overdue-badge-mobile" class="hidden text-xs font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5"></span>
+      </div>
+    </div>
+    <div id="page-content" class="p-4 md:p-8 max-w-6xl mx-auto">
+      <div class="flex items-center justify-center h-64 text-gray-400">Loading…</div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MODAL SHELL ═══ -->
+<div id="modal-root"></div>
+
+<!-- ══════════════════════════════════════════════════ LEAD DRAWER ═══ -->
+<div id="drawer-backdrop" class="fixed inset-0 bg-black/40 z-40 opacity-0 pointer-events-none transition-opacity duration-250"></div>
+<div id="lead-drawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col translate-x-full transition-transform duration-250 ease-in-out overflow-hidden">
+  <div id="drawer-content" class="flex flex-col h-full overflow-y-auto"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ APP ═══ -->
+<script>
+// ── database (inlined from db.js) ─────────────────────────────────────────
+const DB_NAME = 'cfb_crm';
+const DB_VERSION = 2;
+let _db = null;
+
+function openDB() {
+  if (_db) return Promise.resolve(_db);
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('members')) {
+        const m = db.createObjectStore('members', { keyPath: 'id', autoIncrement: true });
+        m.createIndex('status', 'status'); m.createIndex('email', 'email', { unique: true });
+      }
+      if (!db.objectStoreNames.contains('leads')) {
+        const l = db.createObjectStore('leads', { keyPath: 'id', autoIncrement: true });
+        l.createIndex('status', 'status'); l.createIndex('createdAt', 'createdAt'); l.createIndex('followUpDate', 'followUpDate');
+      }
+      if (!db.objectStoreNames.contains('leadActivities')) {
+        const la = db.createObjectStore('leadActivities', { keyPath: 'id', autoIncrement: true });
+        la.createIndex('leadId', 'leadId'); la.createIndex('createdAt', 'createdAt');
+      }
+      if (!db.objectStoreNames.contains('checkins')) {
+        const c = db.createObjectStore('checkins', { keyPath: 'id', autoIncrement: true });
+        c.createIndex('memberId', 'memberId'); c.createIndex('checkedInAt', 'checkedInAt');
+      }
+      if (!db.objectStoreNames.contains('notes')) {
+        const n = db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+        n.createIndex('memberId', 'memberId');
+      }
+    };
+    req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
+    req.onerror  = (e) => reject(e.target.error);
+  });
+}
+
+function _tx(store, mode = 'readonly') { return _db.transaction(store, mode).objectStore(store); }
+function _all(store) { return new Promise((res, rej) => { const r = _tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function _get(store, id) { return new Promise((res, rej) => { const r = _tx(store).get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function _put(store, record) { return new Promise((res, rej) => { const r = _tx(store, 'readwrite').put(record); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function _del(store, id) { return new Promise((res, rej) => { const r = _tx(store, 'readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+function _byIndex(store, index, value) { return new Promise((res, rej) => { const r = _tx(store).index(index).getAll(value); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+
+const Members       = { list: () => _all('members'), get: id => _get('members', id), save: m => _put('members', { ...m, createdAt: m.createdAt ?? new Date().toISOString() }), delete: id => _del('members', id) };
+const Leads         = { list: () => _all('leads'),   get: id => _get('leads', id),   save: l => _put('leads',   { ...l, createdAt: l.createdAt ?? new Date().toISOString() }), delete: id => _del('leads', id) };
+const LeadActivities = { forLead: leadId => _byIndex('leadActivities', 'leadId', leadId), add: (leadId, type, content) => _put('leadActivities', { leadId, type, content, createdAt: new Date().toISOString() }), delete: id => _del('leadActivities', id) };
+const Checkins      = { list: () => _all('checkins'), forMember: memberId => _byIndex('checkins', 'memberId', memberId), add: memberId => _put('checkins', { memberId, checkedInAt: new Date().toISOString() }), delete: id => _del('checkins', id) };
+const Notes         = { forMember: memberId => _byIndex('notes', 'memberId', memberId), add: (memberId, content) => _put('notes', { memberId, content, createdAt: new Date().toISOString() }), delete: id => _del('notes', id) };
+
+async function seedIfEmpty() {
+  const existing = await Members.list();
+  if (existing.length > 0) return;
+  const today = new Date();
+  const dft = d => new Date(today.getTime() + d * 86400000).toISOString().slice(0, 10);
+  const mems = [
+    { name: 'Sarah Thornton',  phone: '07700900001', email: 'sarah.thornton@email.com',  membershipType: 'Monthly Unlimited', status: 'active',   joinedDate: '2024-01-10' },
+    { name: 'James Pickering', phone: '07700900002', email: 'james.pickering@email.com', membershipType: 'Monthly Unlimited', status: 'active',   joinedDate: '2024-03-05' },
+    { name: 'Emma Walsh',      phone: '07700900003', email: 'emma.walsh@email.com',      membershipType: 'Annual',            status: 'active',   joinedDate: '2023-09-01' },
+    { name: 'Dan Hartley',     phone: '07700900004', email: 'dan.hartley@email.com',     membershipType: 'Pay Per Class',     status: 'inactive', joinedDate: '2023-11-20' },
+    { name: 'Priya Sharma',    phone: '07700900005', email: 'priya.sharma@email.com',    membershipType: 'Annual',            status: 'active',   joinedDate: '2024-02-14' },
+  ];
+  const leds = [
+    { name: 'Tom Bates',    phone: '07700900010', email: 'tom.bates@email.com',    source: 'Social Media', status: 'new',       followUpDate: dft(1),  notes: 'Saw our Instagram post' },
+    { name: 'Lucy Pearce',  phone: '07700900011', email: 'lucy.pearce@email.com',  source: 'Referral',     status: 'contacted', followUpDate: dft(-1), notes: 'Referred by Sarah Thornton' },
+    { name: 'Marcus Webb',  phone: '07700900012', email: 'marcus.webb@email.com',  source: 'Walk-in',      status: 'converted', followUpDate: '',      notes: 'Signed up for monthly' },
+    { name: 'Jade Holroyd', phone: '07700900013', email: 'jade.holroyd@email.com', source: 'Website',      status: 'lost',      followUpDate: '',      notes: 'No response after follow-up' },
+    { name: 'Ryan Moss',    phone: '07700900014', email: 'ryan.moss@email.com',    source: 'Referral',     status: 'contacted', followUpDate: dft(0),  notes: 'Friend of James Pickering' },
+  ];
+  for (const m of mems) await Members.save(m);
+  for (const l of leds) await Leads.save(l);
+  const savedLeads = await Leads.list();
+  const lucy  = savedLeads.find(l => l.name === 'Lucy Pearce');
+  const ryan  = savedLeads.find(l => l.name === 'Ryan Moss');
+  const marcus = savedLeads.find(l => l.name === 'Marcus Webb');
+  if (lucy)  { await _put('leadActivities', { leadId: lucy.id,   type: 'Call',    content: 'Left voicemail. Will try again tomorrow.',                                   createdAt: new Date(Date.now() - 3*86400000).toISOString() }); await _put('leadActivities', { leadId: lucy.id, type: 'WhatsApp', content: 'Sent intro message with class schedule.', createdAt: new Date(Date.now() - 86400000).toISOString() }); }
+  if (ryan)  { await _put('leadActivities', { leadId: ryan.id,   type: 'Call',    content: 'Spoke briefly — interested in morning classes. Calling back today.',          createdAt: new Date(Date.now() - 2*86400000).toISOString() }); }
+  if (marcus){ await _put('leadActivities', { leadId: marcus.id, type: 'Meeting', content: 'Came in for a trial class. Loved it — signed up on the spot.',                createdAt: new Date(Date.now() - 5*86400000).toISOString() }); }
+  const saved = await Members.list();
+  const now = Date.now(), day = 86400000;
+  const ciDays = { 'Sarah Thornton': [1,3,5,8,10,12], 'James Pickering': [2,4,7,9], 'Emma Walsh': [1,2,3,4,5,6,8,9,10,11,12,13], 'Priya Sharma': [20,25] };
+  for (const m of saved) for (const d of (ciDays[m.name] ?? [])) await _put('checkins', { memberId: m.id, checkedInAt: new Date(now - d*day).toISOString() });
+  const sarah = saved.find(m => m.name === 'Sarah Thornton');
+  if (sarah) await Notes.add(sarah.id, 'Competing in local throwdown next month. Adjust programming accordingly.');
+}
+
+// ── boot ──────────────────────────────────────────────────────────────────
+(async () => {
+  await openDB();
+  await seedIfEmpty();
+  render();
+})();
+
+// ── routing ───────────────────────────────────────────────────────────────
+const pages = { dashboard, members, leads, checkins };
+let currentPage = 'dashboard';
+
+document.getElementById('sidebar-nav').addEventListener('click', (e) => {
+  const link = e.target.closest('[data-page]');
+  if (!link) return;
+  e.preventDefault();
+  navigate(link.dataset.page);
+});
+
+// ── Mobile sidebar toggle ─────────────────────────────────────────────────
+function openSidebar() {
+  document.getElementById('sidebar').classList.remove('-translate-x-full');
+  document.getElementById('sidebar-backdrop').classList.remove('hidden');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebar-backdrop').classList.add('hidden');
+}
+document.getElementById('btn-mobile-menu').addEventListener('click', openSidebar);
+document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
+document.getElementById('sidebar-nav').querySelectorAll('[data-page]').forEach(link => {
+  link.addEventListener('click', closeSidebar);
+});
+
+document.getElementById('btn-open-settings').addEventListener('click', () => {
+  settingsModal();
+  let pendingRestore = null;
+
+  document.getElementById('btn-backup').addEventListener('click', async () => {
+    await backupAll();
+    showToast('Backup downloaded');
+  });
+
+  document.getElementById('restore-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const counts = [
+          `${(data.members ?? []).length} members`,
+          `${(data.leads ?? []).length} leads`,
+          `${(data.leadActivities ?? []).length} activities`,
+          `${(data.checkins ?? []).length} check-ins`,
+          `${(data.notes ?? []).length} notes`,
+        ];
+        const backed = data.exportedAt ? `Backed up ${new Date(data.exportedAt).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}` : 'Unknown date';
+        document.getElementById('restore-preview').innerHTML =
+          `<div class="font-medium mb-1">${backed}</div>` +
+          counts.map(c => `<div>• ${c}</div>`).join('');
+        document.getElementById('restore-preview').classList.remove('hidden');
+        document.getElementById('btn-restore').classList.remove('hidden');
+        pendingRestore = ev.target.result;
+      } catch {
+        showToast('Could not read file — make sure it is a CFB backup');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('btn-restore').addEventListener('click', async () => {
+    if (!pendingRestore) return;
+    if (!confirm('This will replace ALL current data with the backup. Are you sure?')) return;
+    await restoreAll(pendingRestore);
+    showToast('Data restored successfully');
+    closeModal();
+    render();
+  });
+
+  document.getElementById('btn-clear-all').addEventListener('click', async () => {
+    if (!confirm('This will delete ALL data and reload demo data. Are you sure?')) return;
+    const stores = ['members','leads','leadActivities','checkins','notes'];
+    await Promise.all(stores.map(s => new Promise((res, rej) => {
+      const r = _db.transaction(s, 'readwrite').objectStore(s).clear();
+      r.onsuccess = res; r.onerror = rej;
+    })));
+    await seedIfEmpty();
+    showToast('Data cleared — demo data loaded');
+    closeModal();
+    render();
+  });
+
+  // WhatsApp templates — save
+  document.getElementById('btn-save-templates')?.addEventListener('click', () => {
+    const tmpls = {
+      message1:     document.getElementById('tmpl-message1').value.trim(),
+      message2:     document.getElementById('tmpl-message2').value.trim(),
+      last_message: document.getElementById('tmpl-last_message').value.trim(),
+    };
+    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(tmpls));
+    showToast('✓ Templates saved');
+  });
+
+  // Sheet URL — save
+  document.getElementById('btn-save-sheet-url')?.addEventListener('click', () => {
+    const url = document.getElementById('sheet-url-input').value.trim();
+    if (url) {
+      localStorage.setItem(SHEET_URL_KEY, url);
+      document.getElementById('btn-sync-now').disabled = false;
+      document.getElementById('sheet-url-status').textContent = '✓ URL saved — use "Sync Now" or the Sync button on the Leads page.';
+      showToast('Sheet URL saved');
+    } else {
+      localStorage.removeItem(SHEET_URL_KEY);
+      document.getElementById('btn-sync-now').disabled = true;
+      document.getElementById('sheet-url-status').textContent = 'No URL saved yet.';
+      showToast('Sheet URL cleared');
+    }
+  });
+
+  // Sheet URL — sync now
+  document.getElementById('btn-sync-now')?.addEventListener('click', async () => {
+    const url = localStorage.getItem(SHEET_URL_KEY);
+    if (!url) return;
+    const btn = document.getElementById('btn-sync-now');
+    btn.textContent = 'Syncing…';
+    btn.disabled = true;
+    await syncLeadsFromUrl(url);
+    btn.textContent = 'Sync Now';
+    btn.disabled = false;
+    closeModal();
+  });
+
+  document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+});
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('[data-page]').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  render();
+}
+
+async function render() {
+  const el = document.getElementById('page-content');
+  el.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-400"><div class="animate-pulse">Loading…</div></div>';
+  el.innerHTML = await pages[currentPage]();
+  attachHandlers(currentPage);
+  updateSidebarBadge();
+}
+
+async function updateSidebarBadge() {
+  const badge       = document.getElementById('leads-overdue-badge');
+  const mobileBadge = document.getElementById('leads-overdue-badge-mobile');
+  if (!badge) return;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const leads = await Leads.list();
+  const count = leads.filter(l =>
+    l.status !== 'converted' && l.status !== 'lost' &&
+    l.followUpDate && l.followUpDate < todayStr
+  ).length;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove('hidden');
+    if (mobileBadge) { mobileBadge.textContent = count; mobileBadge.classList.remove('hidden'); }
+  } else {
+    badge.classList.add('hidden');
+    if (mobileBadge) mobileBadge.classList.add('hidden');
+  }
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
+function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }
+function daysSince(iso) { if (!iso) return Infinity; return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); }
+
+function statusBadge(status) {
+  const map = {
+    active:    'bg-green-100 text-green-800',
+    inactive:  'bg-gray-100 text-gray-600',
+    frozen:    'bg-blue-100 text-blue-800',
+    new:       'bg-yellow-100 text-yellow-800',
+    contacted: 'bg-orange-100 text-orange-800',
+    converted: 'bg-green-100 text-green-800',
+    lost:      'bg-red-100 text-red-700',
+  };
+  return `<span class="badge ${map[status] ?? 'bg-gray-100 text-gray-600'}">${esc(status)}</span>`;
+}
+
+// ── CSV import ────────────────────────────────────────────────────────────
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuote = false;
+  const src = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n') + '\n';
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (inQuote) {
+      if (c === '"' && src[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else field += c;
+    } else {
+      if      (c === '"')  inQuote = true;
+      else if (c === ',')  { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); field = ''; if (row.some(f => f.trim())) rows.push(row); row = []; }
+      else field += c;
+    }
+  }
+  if (rows.length === 0) return { headers: [], rows: [] };
+  const headers = rows[0].map(h => h.trim());
+  const dataRows = rows.slice(1)
+    .filter(r => r.some(f => f.trim()))
+    .map(r => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? '').trim()])));
+  return { headers, rows: dataRows };
+}
+
+function detectLeadColumns(headers) {
+  const norm = h => h.toLowerCase().replace(/[\s_\-()]/g, '');
+  const match = (...patterns) => headers.find(h => patterns.includes(norm(h))) ?? null;
+  return {
+    name:   match('name','fullname','contactname','contact','leadname','firstname','person'),
+    email:  match('email','emailaddress','mail','emailaddr'),
+    phone:  match('phone','phonenumber','telephone','mobile','mob','cell','number','tel'),
+    source: match('source','leadsource','channel','referredby','referralsource','where','howdidyouhear'),
+    status: match('status','leadstatus','stage'),
+    notes:  match('notes','note','comments','comment','description','details','info'),
+  };
+}
+
+// ── CSV export ────────────────────────────────────────────────────────────
+function toCSV(rows, columns) {
+  const header = columns.map(c => `"${c.label}"`).join(',');
+  const body = rows.map(row =>
+    columns.map(c => {
+      const val = String(c.get(row) ?? '').replace(/"/g, '""');
+      return `"${val}"`;
+    }).join(',')
+  );
+  return [header, ...body].join('\r\n');
+}
+
+function downloadCSV(filename, csv) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function waLink(phone) {
+  if (!phone) return null;
+  let num = phone.replace(/[\s\-\(\)\+]/g, '');
+  if (num.startsWith('0')) num = '44' + num.slice(1);
+  return `whatsapp://send?phone=${num}`;
+}
+
+// ── Tags ──────────────────────────────────────────────────────────────────
+const TAG_COLORS = [
+  'bg-red-100 text-red-700', 'bg-orange-100 text-orange-700',
+  'bg-yellow-100 text-yellow-800', 'bg-green-100 text-green-700',
+  'bg-blue-100 text-blue-700', 'bg-violet-100 text-violet-700',
+  'bg-pink-100 text-pink-700', 'bg-indigo-100 text-indigo-700',
+];
+function tagColor(tag) {
+  let h = 0;
+  for (const c of tag) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return TAG_COLORS[Math.abs(h) % TAG_COLORS.length];
+}
+function tagChip(tag, removable = false, leadId = null) {
+  const color = tagColor(tag);
+  return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium ${color}">
+    ${esc(tag)}${removable ? `<button class="btn-remove-tag ml-0.5 hover:opacity-60 leading-none" data-tag="${esc(tag)}" data-leadid="${leadId}" onclick="event.stopPropagation()">×</button>` : ''}
+  </span>`;
+}
+
+const TAG_PRESETS = ['🔥 Hot', '❄️ Cold', 'Price Sensitive', 'Morning Class', 'Evening Class', 'Needs Follow-up', 'VIP Referral', 'Long-term'];
+
+function waBtn(phone, classes = '') {
+  const link = waLink(phone);
+  if (!link) return '';
+  return `<a href="${link}" target="_blank" rel="noopener"
+    onclick="event.stopPropagation()"
+    class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition-colors ${classes}">
+    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.514 5.836L.057 23.143a.75.75 0 00.943.899l5.4-1.635A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.694 9.694 0 01-4.953-1.355l-.355-.212-3.676 1.113 1.04-3.583-.232-.368A9.693 9.693 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+    WhatsApp
+  </a>`;
+}
+
+function showToast(message) {
+  const t = document.createElement('div');
+  t.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 transition-opacity';
+  t.textContent = message;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+function modal(html) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">${html}</div>`;
+  root.querySelector('#modal-backdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-backdrop') closeModal();
+  });
+}
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+  document.querySelectorAll('.card-pressed').forEach(el => el.classList.remove('card-pressed'));
+}
+
+function closeLeadDrawer() {
+  document.getElementById('lead-drawer').classList.remove('drawer-open');
+  document.getElementById('drawer-backdrop').classList.remove('drawer-open');
+  document.querySelectorAll('.card-pressed').forEach(el => el.classList.remove('card-pressed'));
+}
+
+async function openLeadDrawer(lead) {
+  const activities = await LeadActivities.forLead(lead.id);
+  const sorted = [...activities].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const fuOverdue = lead.followUpDate && lead.followUpDate < todayStr;
+  const fuToday   = lead.followUpDate && lead.followUpDate === todayStr;
+  const td = lead.trialDate;
+  const trialToday  = td && td === todayStr;
+  const trialFuture = td && td > todayStr;
+  const typeIcons = { Call:'📞', WhatsApp:'💬', Email:'📧', Meeting:'🤝', Trial:'✅', Note:'📝' };
+
+  document.getElementById('drawer-content').innerHTML = `
+    <!-- Header -->
+    <div class="px-5 py-4 border-b border-gray-100 flex items-start justify-between shrink-0">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-900">${esc(lead.name)}</h2>
+        <div class="flex items-center gap-2 mt-1">
+          ${statusBadge(lead.status)}
+          <span class="text-sm text-gray-400">${esc(lead.source)}</span>
+        </div>
+      </div>
+      <button id="drawer-close" class="text-gray-400 hover:text-gray-600 text-xl leading-none mt-0.5">✕</button>
+    </div>
+
+    <!-- Contact info -->
+    <div class="px-5 py-4 border-b border-gray-100 space-y-2 text-sm shrink-0">
+      ${lead.phone ? `<div class="flex items-center gap-3">
+        <span class="text-gray-400 w-14 shrink-0">Phone</span>
+        <a href="tel:${esc(lead.phone)}" class="text-brand hover:underline">${esc(lead.phone)}</a>
+        ${waBtn(lead.phone, 'ml-1')}
+      </div>` : ''}
+      ${lead.email ? `<div class="flex items-center gap-3">
+        <span class="text-gray-400 w-14 shrink-0">Email</span>
+        <a href="mailto:${esc(lead.email)}" class="text-brand hover:underline truncate">${esc(lead.email)}</a>
+      </div>` : ''}
+      <div class="flex gap-3"><span class="text-gray-400 w-14 shrink-0">Added</span><span class="text-gray-700">${fmtDate(lead.createdAt)}</span></div>
+      ${lead.notes ? `<div class="flex gap-3"><span class="text-gray-400 w-14 shrink-0">Notes</span><span class="text-gray-600">${esc(lead.notes)}</span></div>` : ''}
+    </div>
+
+    <!-- Tags -->
+    <div class="px-5 py-3 border-b border-gray-100 shrink-0">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-medium text-sm text-gray-800">Tags</h3>
+      </div>
+      <div class="flex flex-wrap gap-1.5 mb-2" id="drawer-tags">
+        ${(lead.tags ?? []).map(t => tagChip(t, true, lead.id)).join('')}
+        ${!(lead.tags?.length) ? '<span class="text-xs text-gray-400">No tags yet</span>' : ''}
+      </div>
+      <div class="flex flex-wrap gap-1 mb-2">
+        ${TAG_PRESETS.filter(p => !(lead.tags ?? []).includes(p)).map(p =>
+          `<button class="drawer-tag-preset text-xs px-2 py-0.5 rounded-full border border-gray-200 text-gray-500 hover:border-brand hover:text-brand transition-colors" data-tag="${esc(p)}">${esc(p)}</button>`
+        ).join('')}
+      </div>
+      <div class="flex gap-2">
+        <input class="input flex-1 text-sm" id="drawer-tag-input" placeholder="Add custom tag…" />
+        <button id="drawer-add-tag" class="btn-ghost text-xs px-3">Add</button>
+      </div>
+    </div>
+
+    <!-- Follow-up -->
+    <div class="px-5 py-3 border-b border-gray-100 flex items-center gap-3 shrink-0">
+      <span class="text-sm text-gray-500 w-16 shrink-0">Follow-up</span>
+      <input type="date" id="drawer-followup-input" value="${lead.followUpDate ?? ''}"
+        class="input text-sm flex-1 ${fuOverdue ? 'border-red-400 bg-red-50' : fuToday ? 'border-orange-400 bg-orange-50' : ''}" />
+      <button id="drawer-save-followup" class="btn-ghost text-xs py-1 px-3">Save</button>
+      ${lead.followUpDate ? `<button id="drawer-clear-followup" class="text-xs text-gray-400 hover:text-red-500">Clear</button>` : ''}
+    </div>
+
+    <!-- Trial date -->
+    <div class="px-5 py-3 border-b border-gray-100 flex items-center gap-3 shrink-0">
+      <span class="text-sm text-gray-500 w-16 shrink-0">Trial</span>
+      <input type="date" id="drawer-trial-input" value="${td ?? ''}"
+        class="input text-sm flex-1 ${trialToday ? 'border-green-400 bg-green-50' : trialFuture ? 'border-blue-300 bg-blue-50' : ''}" />
+      <button id="drawer-save-trial" class="btn-ghost text-xs py-1 px-3">Save</button>
+      ${td ? `<button id="drawer-clear-trial" class="text-xs text-gray-400 hover:text-red-500">Clear</button>` : ''}
+    </div>
+
+    <!-- Activity log -->
+    <div class="px-5 py-4 border-b border-gray-100 flex-1">
+      <h3 class="font-medium text-sm text-gray-800 mb-3">Activity (${sorted.length})</h3>
+      <div class="space-y-3 max-h-52 overflow-y-auto">
+        ${sorted.map(a => `
+          <div class="flex gap-3 text-sm group">
+            <span class="text-base shrink-0">${typeIcons[a.type] ?? '📝'}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-xs text-gray-500">${a.type}</span>
+                <span class="text-xs text-gray-400">${fmtDateTime(a.createdAt)}</span>
+              </div>
+              <p class="text-gray-700">${esc(a.content)}</p>
+            </div>
+            <button class="drawer-delete-activity text-xs text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 shrink-0" data-id="${a.id}">✕</button>
+          </div>`).join('') || '<p class="text-xs text-gray-400">No activity yet.</p>'}
+      </div>
+    </div>
+
+    <!-- WhatsApp templates -->
+    ${lead.phone ? (() => {
+      const tmpls = getTemplates();
+      const labels = { message1: '💬 Message 1', message2: '💬 Message 2', last_message: '💬 Last Message' };
+      return `<div class="px-5 py-4 border-b border-gray-100 shrink-0">
+        <h3 class="font-medium text-sm text-gray-800 mb-2">WhatsApp Templates</h3>
+        <div class="space-y-2">
+          ${Object.entries(labels).map(([key, label]) => {
+            const msg = applyTemplate(tmpls[key] ?? '', lead);
+            const link = waTemplateLink(lead.phone, msg);
+            return `<a href="${link}" target="_blank"
+              class="flex items-start gap-2 p-2 rounded-lg border border-gray-200 hover:border-green-400 hover:bg-green-50 transition-colors group">
+              <span class="text-base shrink-0 mt-0.5">💬</span>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold text-gray-700 group-hover:text-green-700">${label.replace('💬 ','')}</div>
+                <div class="text-xs text-gray-400 truncate">${esc(msg)}</div>
+              </div>
+            </a>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })() : ''}
+
+    <!-- Log activity -->
+    <div class="px-5 py-4 border-b border-gray-100 shrink-0">
+      <h3 class="font-medium text-sm text-gray-800 mb-2">Log Activity</h3>
+      <div class="flex flex-wrap gap-1.5 mb-2">
+        ${['Call','WhatsApp','Email','Meeting','Trial','Note'].map(t =>
+          `<button class="drawer-activity-type px-2 py-1 rounded-md text-xs border border-gray-200 hover:border-brand hover:text-brand transition-colors" data-type="${t}">${typeIcons[t]} ${t}</button>`
+        ).join('')}
+      </div>
+      <div class="flex gap-2">
+        <input class="input flex-1 text-sm" id="drawer-activity-input" placeholder="What happened? What's next?" />
+        <button id="drawer-log-activity" data-id="${lead.id}" class="btn-primary text-xs shrink-0">Log</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="px-5 py-4 flex gap-2 shrink-0">
+      <button id="drawer-edit" data-id="${lead.id}" class="btn-ghost flex-1 text-sm">Edit</button>
+      <button id="drawer-delete" data-id="${lead.id}" class="btn-ghost flex-1 text-sm text-red-600 border-red-200 hover:bg-red-50">Delete</button>
+    </div>`;
+
+  // Open drawer
+  document.getElementById('lead-drawer').classList.add('drawer-open');
+  document.getElementById('drawer-backdrop').classList.add('drawer-open');
+
+  // Handlers
+  document.getElementById('drawer-close').addEventListener('click', closeLeadDrawer);
+  document.getElementById('drawer-backdrop').onclick = closeLeadDrawer;
+
+  // Tag helpers
+  async function addTag(tag) {
+    tag = tag.trim();
+    if (!tag) return;
+    const fresh = await Leads.get(lead.id);
+    const tags = [...new Set([...(fresh.tags ?? []), tag])];
+    await Leads.save({ ...fresh, tags });
+    openLeadDrawer(await Leads.get(lead.id));
+  }
+  async function removeTag(tag) {
+    const fresh = await Leads.get(lead.id);
+    await Leads.save({ ...fresh, tags: (fresh.tags ?? []).filter(t => t !== tag) });
+    openLeadDrawer(await Leads.get(lead.id));
+  }
+
+  document.querySelectorAll('.btn-remove-tag').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); removeTag(btn.dataset.tag); });
+  });
+  document.querySelectorAll('.drawer-tag-preset').forEach(btn => {
+    btn.addEventListener('click', () => addTag(btn.dataset.tag));
+  });
+  const tagInput = document.getElementById('drawer-tag-input');
+  document.getElementById('drawer-add-tag').addEventListener('click', () => { addTag(tagInput.value); tagInput.value = ''; });
+  tagInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput.value); tagInput.value = ''; } });
+
+  document.getElementById('drawer-save-followup').addEventListener('click', async () => {
+    const date = document.getElementById('drawer-followup-input').value;
+    await Leads.save({ ...lead, followUpDate: date });
+    showToast('Follow-up date saved');
+    openLeadDrawer(await Leads.get(lead.id));
+  });
+  document.getElementById('drawer-clear-followup')?.addEventListener('click', async () => {
+    await Leads.save({ ...lead, followUpDate: '' });
+    openLeadDrawer(await Leads.get(lead.id));
+  });
+
+  document.getElementById('drawer-save-trial').addEventListener('click', async () => {
+    const date = document.getElementById('drawer-trial-input').value;
+    await Leads.save({ ...lead, trialDate: date });
+    showToast('Trial date saved');
+    openLeadDrawer(await Leads.get(lead.id));
+  });
+  document.getElementById('drawer-clear-trial')?.addEventListener('click', async () => {
+    await Leads.save({ ...lead, trialDate: '' });
+    openLeadDrawer(await Leads.get(lead.id));
+  });
+
+  // Activity type selector
+  let selectedType = 'Note';
+  document.querySelectorAll('.drawer-activity-type').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.drawer-activity-type').forEach(b => b.classList.remove('border-brand','text-brand','bg-blue-50'));
+      btn.classList.add('border-brand','text-brand','bg-blue-50');
+      selectedType = btn.dataset.type;
+    });
+  });
+
+  document.getElementById('drawer-log-activity').addEventListener('click', async () => {
+    const input = document.getElementById('drawer-activity-input');
+    const content = input.value.trim();
+    if (!content) return;
+    await LeadActivities.add(lead.id, selectedType, content);
+    input.value = '';
+    openLeadDrawer(await Leads.get(lead.id));
+  });
+
+  document.querySelectorAll('.drawer-delete-activity').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await LeadActivities.delete(Number(btn.dataset.id));
+      openLeadDrawer(await Leads.get(lead.id));
+    });
+  });
+
+  document.getElementById('drawer-edit').addEventListener('click', async () => {
+    const fresh = await Leads.get(lead.id);
+    if (fresh) { leadFormModal(fresh); attachLeadFormHandlers(fresh.id); }
+  });
+
+  document.getElementById('drawer-delete').addEventListener('click', async () => {
+    if (confirm(`Delete ${lead.name}? This cannot be undone.`)) {
+      await Leads.delete(lead.id);
+      closeLeadDrawer();
+      render();
+    }
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLeadDrawer(); }, { once: true });
+}
+
+// ══════════════════════════════════════════════ PAGE: DASHBOARD ══════════
+async function dashboard() {
+  const [members, leads, checkins] = await Promise.all([Members.list(), Leads.list(), Checkins.list()]);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+  // Follow-up buckets (active leads only)
+  const openLeads = leads.filter(l => l.status !== 'converted' && l.status !== 'lost');
+  const overdue   = openLeads.filter(l => l.followUpDate && l.followUpDate < todayStr);
+  const dueToday  = openLeads.filter(l => l.followUpDate === todayStr);
+  const upcoming  = openLeads.filter(l => l.followUpDate && l.followUpDate > todayStr);
+
+  // Trial class buckets (next 14 days, not converted/lost)
+  const in14Days = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+  const trialsToday    = leads.filter(l => l.trialDate === todayStr && l.status !== 'lost');
+  const trialsUpcoming = leads.filter(l => l.trialDate && l.trialDate > todayStr && l.trialDate <= in14Days && l.status !== 'lost')
+    .sort((a, b) => a.trialDate.localeCompare(b.trialDate));
+
+  // Pipeline counts
+  const byStatus = Object.fromEntries(LEAD_COLS.map(s => [s, 0]));
+  for (const l of leads) if (byStatus[l.status] !== undefined) byStatus[l.status]++;
+  const newThisMonth = leads.filter(l => l.createdAt >= monthStart).length;
+  const conversionRate = leads.length
+    ? Math.round((byStatus.converted / leads.length) * 100) : 0;
+
+  // Leads by source
+  const bySource = {};
+  for (const l of leads) bySource[l.source] = (bySource[l.source] ?? 0) + 1;
+  const sourceRows = Object.entries(bySource).sort((a, b) => b[1] - a[1]);
+
+  // Active members for quick check-in
+  const activeMembers = members.filter(m => m.status === 'active');
+
+  function followUpRow(l, urgency) {
+    const colors = { overdue: 'border-l-red-500 bg-red-50', today: 'border-l-orange-400 bg-orange-50', upcoming: 'border-l-blue-400 bg-blue-50' };
+    return `
+      <div class="border-l-4 ${colors[urgency]} px-4 py-3 rounded-r-lg flex items-center justify-between btn-open-lead cursor-pointer" data-id="${l.id}">
+        <div>
+          <div class="font-medium text-sm">${esc(l.name)}</div>
+          <div class="text-xs text-gray-500">${esc(l.source)} · ${statusBadge(l.status)}</div>
+        </div>
+        <div class="text-right shrink-0 ml-3">
+          ${urgency === 'overdue'
+            ? `<div class="text-xs font-semibold text-red-600">Overdue</div>`
+            : `<div class="text-xs font-semibold text-orange-600">Today</div>`}
+          <div class="text-xs text-gray-400">${fmtDate(l.followUpDate)}</div>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="space-y-8">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p class="text-sm text-gray-500 mt-1">${new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</p>
+        </div>
+        <button class="btn-ghost text-sm" id="btn-weekly-summary">📋 Weekly Summary</button>
+      </div>
+
+      <!-- Follow-ups due -->
+      <div class="card">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="font-semibold text-gray-900">Follow-ups</h2>
+          <div class="flex gap-2">
+            ${overdue.length  ? `<span class="badge bg-red-100 text-red-700">${overdue.length} overdue</span>` : ''}
+            ${dueToday.length ? `<span class="badge bg-orange-100 text-orange-700">${dueToday.length} today</span>` : ''}
+            ${!overdue.length && !dueToday.length ? `<span class="badge bg-green-100 text-green-700">All clear</span>` : ''}
+          </div>
+        </div>
+        <div class="px-6 py-4 space-y-2">
+          ${overdue.map(l => followUpRow(l, 'overdue')).join('')}
+          ${dueToday.map(l => followUpRow(l, 'today')).join('')}
+          ${!overdue.length && !dueToday.length ? `<p class="text-sm text-gray-400 text-center py-4">No follow-ups due today. Next up: ${upcoming.length ? fmtDate(upcoming.sort((a,b) => a.followUpDate.localeCompare(b.followUpDate))[0].followUpDate) : 'none scheduled'}.</p>` : ''}
+        </div>
+      </div>
+
+      <!-- Trial classes -->
+      <div class="card">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="font-semibold text-gray-900">Trial Classes</h2>
+          <div class="flex gap-2">
+            ${trialsToday.length    ? `<span class="badge bg-green-100 text-green-700">${trialsToday.length} today</span>` : ''}
+            ${trialsUpcoming.length ? `<span class="badge bg-blue-100 text-blue-700">${trialsUpcoming.length} upcoming</span>` : ''}
+            ${!trialsToday.length && !trialsUpcoming.length ? `<span class="badge bg-gray-100 text-gray-500">None in next 14 days</span>` : ''}
+          </div>
+        </div>
+        <div class="px-6 py-4 space-y-2">
+          ${[...trialsToday, ...trialsUpcoming].map(l => `
+            <div class="border-l-4 ${l.trialDate === todayStr ? 'border-l-green-500 bg-green-50' : 'border-l-blue-400 bg-blue-50'} px-4 py-3 rounded-r-lg flex items-center justify-between btn-open-lead cursor-pointer" data-id="${l.id}">
+              <div>
+                <div class="font-medium text-sm">${esc(l.name)}</div>
+                <div class="text-xs text-gray-500">${esc(l.source)} · ${esc(l.phone ?? '')}</div>
+              </div>
+              <div class="text-right shrink-0 ml-3">
+                <div class="text-xs font-semibold ${l.trialDate === todayStr ? 'text-green-600' : 'text-blue-600'}">${l.trialDate === todayStr ? 'Today!' : fmtDate(l.trialDate)}</div>
+                <div class="text-xs text-gray-400">${statusBadge(l.status)}</div>
+              </div>
+            </div>`).join('') || '<p class="text-sm text-gray-400 text-center py-4">No trials booked in the next 14 days.</p>'}
+        </div>
+      </div>
+
+      <!-- Pipeline stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card p-5">
+          <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">New Leads</div>
+          <div class="text-3xl font-bold text-yellow-600">${byStatus.new}</div>
+          <div class="text-xs text-gray-400 mt-1">${newThisMonth} this month</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Contacted</div>
+          <div class="text-3xl font-bold text-orange-500">${byStatus.contacted}</div>
+          <div class="text-xs text-gray-400 mt-1">${openLeads.length} open total</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Converted</div>
+          <div class="text-3xl font-bold text-green-600">${byStatus.converted}</div>
+          <div class="text-xs text-gray-400 mt-1">${conversionRate}% conversion</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Lost</div>
+          <div class="text-3xl font-bold text-gray-400">${byStatus.lost}</div>
+          <div class="text-xs text-gray-400 mt-1">${leads.length} total leads</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Leads by source -->
+        <div class="card">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="font-semibold text-gray-900">Leads by Source</h2>
+          </div>
+          <div class="px-6 py-4 space-y-3">
+            ${sourceRows.length ? sourceRows.map(([src, count]) => {
+              const pct = Math.round((count / leads.length) * 100);
+              return `
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">${esc(src)}</span>
+                    <span class="text-gray-500">${count}</span>
+                  </div>
+                  <div class="h-1.5 bg-gray-100 rounded-full">
+                    <div class="h-1.5 bg-brand rounded-full" style="width:${pct}%"></div>
+                  </div>
+                </div>`;
+            }).join('') : '<p class="text-sm text-gray-400">No leads yet.</p>'}
+          </div>
+        </div>
+
+        <!-- Quick check-in -->
+        <div class="card p-5" id="quick-checkin-widget" data-members="${esc(JSON.stringify(activeMembers))}">
+          <h2 class="font-semibold text-gray-900 mb-3">Quick Member Check-in</h2>
+          <input class="input" id="checkin-search" placeholder="Start typing a member's name…" autocomplete="off" />
+          <div id="checkin-results" class="mt-2 space-y-1"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════ PAGE: MEMBERS ════════════
+async function members() {
+  const list = await Members.list();
+
+  return `
+    <div class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Members</h1>
+          <p class="text-sm text-gray-500 mt-1">${list.length} total</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-ghost" id="btn-export-members">↓ Export CSV</button>
+          <button class="btn-primary" id="btn-add-member">+ Add Member</button>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="flex gap-3">
+        <input class="input max-w-xs" id="member-search" placeholder="Search by name or email…" />
+        <select class="select w-40" id="member-filter-status">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="frozen">Frozen</option>
+        </select>
+      </div>
+
+      <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+              <th class="px-4 py-3 text-left font-medium">Name</th>
+              <th class="px-4 py-3 text-left font-medium">Contact</th>
+              <th class="px-4 py-3 text-left font-medium">Membership</th>
+              <th class="px-4 py-3 text-left font-medium">Status</th>
+              <th class="px-4 py-3 text-left font-medium">Joined</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="members-tbody">
+            ${renderMemberRows(list)}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderMemberRows(list) {
+  if (list.length === 0) return `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No members found.</td></tr>`;
+  return list.map(m => `
+    <tr class="table-row" data-id="${m.id}">
+      <td class="px-4 py-3 font-medium">${esc(m.name)}</td>
+      <td class="px-4 py-3 text-gray-500">
+        <div>${esc(m.email)}</div>
+        <div class="text-xs">${esc(m.phone)}</div>
+      </td>
+      <td class="px-4 py-3 text-gray-600">${esc(m.membershipType)}</td>
+      <td class="px-4 py-3">${statusBadge(m.status)}</td>
+      <td class="px-4 py-3 text-gray-500">${fmtDate(m.joinedDate)}</td>
+      <td class="px-4 py-3">
+        <div class="flex gap-2 justify-end">
+          <button class="btn-ghost text-xs py-1 px-2 btn-view-member" data-id="${m.id}">View</button>
+          <button class="btn-ghost text-xs py-1 px-2 btn-edit-member" data-id="${m.id}">Edit</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════ PAGE: LEADS ══════════════
+const LEAD_COLS = ['new','message1','message2','last_message','contacted','trial_booked','trial_attended','nurture','converted','lost'];
+const LEAD_COL_META = {
+  new:            { label: 'New',            color: 'bg-yellow-50 border-yellow-200',   badge: 'bg-yellow-100 text-yellow-800' },
+  message1:       { label: 'Message 1',      color: 'bg-violet-50 border-violet-200',   badge: 'bg-violet-100 text-violet-800' },
+  message2:       { label: 'Message 2',      color: 'bg-purple-50 border-purple-200',   badge: 'bg-purple-100 text-purple-800' },
+  last_message:   { label: 'Last Message',   color: 'bg-rose-50 border-rose-200',       badge: 'bg-rose-100 text-rose-700' },
+  contacted:      { label: 'Contacted',      color: 'bg-orange-50 border-orange-200',   badge: 'bg-orange-100 text-orange-800' },
+  trial_booked:   { label: 'Trial Booked',   color: 'bg-blue-50 border-blue-200',       badge: 'bg-blue-100 text-blue-800' },
+  trial_attended: { label: 'Trial Attended', color: 'bg-cyan-50 border-cyan-200',       badge: 'bg-cyan-100 text-cyan-800' },
+  nurture:        { label: 'Nurture',        color: 'bg-amber-50 border-amber-200',     badge: 'bg-amber-100 text-amber-800' },
+  converted:      { label: 'Converted',      color: 'bg-green-50 border-green-200',     badge: 'bg-green-100 text-green-800' },
+  lost:           { label: 'Lost',           color: 'bg-gray-50 border-gray-200',       badge: 'bg-gray-100 text-gray-600' },
+};
+
+function renderKanban(list) {
+  return LEAD_COLS.map((col, colIdx) => {
+    const group = list.filter(l => l.status === col).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+    const { label, color, badge } = LEAD_COL_META[col];
+    const prevCol = LEAD_COLS[colIdx - 1] ?? null;
+    const nextCol = LEAD_COLS[colIdx + 1] ?? null;
+    return `
+      <div class="border rounded-xl p-3 space-y-3 ${color} drop-zone transition-all shrink-0 w-56" data-status="${col}">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-gray-600">${label}</span>
+          <span class="badge ${badge}">${group.length}</span>
+        </div>
+        ${group.map(l => {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const fu = l.followUpDate;
+          const fuOverdue = fu && fu < todayStr;
+          const fuToday   = fu && fu === todayStr;
+          const fuLabel   = fu
+            ? (fuOverdue ? `<span class="text-red-600 font-medium">Overdue · ${fmtDate(fu)}</span>`
+             : fuToday   ? `<span class="text-orange-600 font-medium">Today</span>`
+                          : `<span class="text-blue-600">Follow-up ${fmtDate(fu)}</span>`)
+            : '';
+          return `
+          <div class="bg-white rounded-lg border-l-4 ${fuOverdue ? 'border-l-red-500' : fuToday ? 'border-l-orange-400' : 'border-l-gray-200'} border border-gray-200 p-3 shadow-sm space-y-1.5 cursor-grab hover:shadow-md transition-shadow btn-view-lead" data-id="${l.id}" draggable="true">
+            <div class="font-semibold text-sm text-gray-900">${esc(l.name)}</div>
+            ${l.tags?.length ? `<div class="flex flex-wrap gap-1">${l.tags.map(t => tagChip(t)).join('')}</div>` : ''}
+            ${l.phone ? `<div class="flex items-center gap-1.5">
+              <div class="text-xs text-gray-700 flex items-center gap-1 flex-1"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><a href="tel:${esc(l.phone)}" class="hover:text-brand hover:underline" onclick="event.stopPropagation()">${esc(l.phone)}</a></div>
+              ${waBtn(l.phone)}
+            </div>` : ''}
+            ${l.email ? `<div class="text-xs text-gray-500 flex items-center gap-1 min-w-0"><svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><a href="mailto:${esc(l.email)}" class="truncate hover:text-brand hover:underline" onclick="event.stopPropagation()">${esc(l.email)}</a></div>` : ''}
+            <div class="text-xs text-gray-400">${esc(l.source)}</div>
+            ${fu ? `<div class="text-xs font-medium">${fuLabel}</div>` : ''}
+            ${l.trialDate ? (() => {
+              const td = l.trialDate;
+              const tp = td < new Date().toISOString().slice(0,10);
+              const tt = td === new Date().toISOString().slice(0,10);
+              return `<div class="text-xs font-medium ${tt ? 'text-green-600' : tp ? 'text-gray-400' : 'text-blue-600'}">🎯 ${tt ? 'Trial today' : tp ? 'Trial was ' + fmtDate(td) : 'Trial ' + fmtDate(td)}</div>`;
+            })() : ''}
+            ${l.notes ? `<div class="text-xs text-gray-400 line-clamp-2 border-t border-gray-50 pt-1.5">${esc(l.notes)}</div>` : ''}
+            <div class="flex justify-between pt-1 border-t border-gray-100 mt-0.5">
+              ${prevCol
+                ? `<button class="btn-move-lead text-gray-400 hover:text-brand text-xs py-0.5 px-1 rounded hover:bg-gray-100 transition-colors" data-id="${l.id}" data-status="${prevCol}" title="${LEAD_COL_META[prevCol].label}" onclick="event.stopPropagation()">← ${LEAD_COL_META[prevCol].label}</button>`
+                : '<span></span>'}
+              ${nextCol
+                ? `<button class="btn-move-lead text-gray-400 hover:text-brand text-xs py-0.5 px-1 rounded hover:bg-gray-100 transition-colors" data-id="${l.id}" data-status="${nextCol}" title="${LEAD_COL_META[nextCol].label}" onclick="event.stopPropagation()">${LEAD_COL_META[nextCol].label} →</button>`
+                : ''}
+            </div>
+          </div>`;
+        }).join('') || '<div class="text-xs text-gray-400 text-center py-2">Empty</div>'}
+      </div>`;
+  }).join('');
+}
+
+function renderMobileList(list, status) {
+  const colIdx = LEAD_COLS.indexOf(status);
+  const prevCol = LEAD_COLS[colIdx - 1] ?? null;
+  const nextCol = LEAD_COLS[colIdx + 1] ?? null;
+  const group = list.filter(l => l.status === status).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+  if (!group.length) return '<div class="text-center text-gray-400 text-sm py-10">No leads in this stage</div>';
+  const todayStr = new Date().toISOString().slice(0, 10);
+  return group.map(l => {
+    const fu = l.followUpDate;
+    const fuOverdue = fu && fu < todayStr;
+    const fuToday   = fu && fu === todayStr;
+    return `
+    <div class="bg-white rounded-xl border-l-4 ${fuOverdue ? 'border-l-red-500' : fuToday ? 'border-l-orange-400' : 'border-l-gray-200'} border border-gray-200 p-4 shadow-sm space-y-2 btn-view-lead cursor-pointer" data-id="${l.id}">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div class="font-semibold text-gray-900">${esc(l.name)}</div>
+          <div class="text-xs text-gray-400 mt-0.5">${esc(l.source)}</div>
+        </div>
+        <div class="flex gap-1 shrink-0">
+          ${prevCol ? `<button class="btn-move-lead text-gray-400 hover:text-brand text-xs px-2 py-1 rounded border border-gray-200 hover:border-brand transition-colors" data-id="${l.id}" data-status="${prevCol}" onclick="event.stopPropagation()" title="${LEAD_COL_META[prevCol].label}">←</button>` : ''}
+          ${nextCol ? `<button class="btn-move-lead text-gray-400 hover:text-brand text-xs px-2 py-1 rounded border border-gray-200 hover:border-brand transition-colors" data-id="${l.id}" data-status="${nextCol}" onclick="event.stopPropagation()" title="${LEAD_COL_META[nextCol].label}">→</button>` : ''}
+        </div>
+      </div>
+      ${l.tags?.length ? `<div class="flex flex-wrap gap-1">${l.tags.map(t => tagChip(t)).join('')}</div>` : ''}
+      <div class="flex flex-wrap gap-3 text-sm">
+        ${l.phone ? `<a href="tel:${esc(l.phone)}" class="text-brand text-sm" onclick="event.stopPropagation()">${esc(l.phone)}</a>` : ''}
+        ${fu ? `<span class="text-xs font-medium ${fuOverdue ? 'text-red-600' : fuToday ? 'text-orange-600' : 'text-blue-600'}">${fuOverdue ? 'Overdue · ' + fmtDate(fu) : fuToday ? 'Today' : 'Follow-up · ' + fmtDate(fu)}</span>` : ''}
+        ${l.trialDate ? `<span class="text-xs font-medium ${l.trialDate === todayStr ? 'text-green-600' : l.trialDate < todayStr ? 'text-gray-400' : 'text-blue-600'}">🎯 ${l.trialDate === todayStr ? 'Trial today' : fmtDate(l.trialDate)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function leads() {
+  const list = await Leads.list();
+
+  return `
+    <div class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Leads</h1>
+          <p class="text-sm text-gray-500 mt-1">${list.length} total</p>
+        </div>
+        <div class="flex gap-2">
+          ${localStorage.getItem(SHEET_URL_KEY) ? `<button class="btn-ghost" id="btn-sync-sheet">⟳ Sync Sheet</button>` : ''}
+          <button class="btn-ghost" id="btn-import-leads">↑ Import</button>
+          <button class="btn-primary" id="btn-add-lead">+ Add Lead</button>
+        </div>
+      </div>
+
+      <div class="flex gap-3 items-center">
+        <input class="input flex-1" id="leads-search" placeholder="Search by name, phone or email…" autocomplete="off" />
+        <select class="select w-44" id="leads-filter-source">
+          <option value="">All sources</option>
+          ${[...new Set(list.map(l => l.source).filter(Boolean))].map(s => `<option>${esc(s)}</option>`).join('')}
+        </select>
+      </div>
+
+      <!-- Mobile list view (small screens only) -->
+      <div class="md:hidden space-y-4">
+        <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" id="mobile-status-tabs">
+          ${LEAD_COLS.map((col, i) => {
+            const count = list.filter(l => l.status === col).length;
+            return `<button class="mobile-status-tab shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap ${i === 0 ? 'bg-brand text-white tab-active' : 'bg-gray-100 text-gray-600'}" data-status="${col}">${LEAD_COL_META[col].label} <span class="opacity-70">(${count})</span></button>`;
+          }).join('')}
+        </div>
+        <div id="mobile-leads-list" class="space-y-3">
+          ${renderMobileList(list, 'new')}
+        </div>
+      </div>
+
+      <!-- Desktop kanban (medium screens and up) -->
+      <div class="hidden md:flex gap-4 overflow-x-auto pb-4" id="leads-kanban" style="min-height:200px">
+        ${renderKanban(list)}
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════ PAGE: CHECK-INS ══════════
+async function checkins() {
+  const [memberList, checkinList] = await Promise.all([Members.list(), Checkins.list()]);
+  const memberMap = Object.fromEntries(memberList.map(m => [m.id, m]));
+
+  const sorted = [...checkinList].sort((a, b) => b.checkedInAt.localeCompare(a.checkedInAt));
+  const today = new Date().toDateString();
+  const todayCount = checkinList.filter(c => new Date(c.checkedInAt).toDateString() === today).length;
+
+  return `
+    <div class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Check-ins</h1>
+          <p class="text-sm text-gray-500 mt-1">${todayCount} today · ${checkinList.length} total</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-ghost" id="btn-export-checkins">↓ Export CSV</button>
+          <button class="btn-primary" id="btn-add-checkin">+ Log Check-in</button>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+              <th class="px-4 py-3 text-left font-medium">Member</th>
+              <th class="px-4 py-3 text-left font-medium">Membership</th>
+              <th class="px-4 py-3 text-left font-medium">Date &amp; Time</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map(c => {
+              const m = memberMap[c.memberId];
+              return `
+                <tr class="table-row">
+                  <td class="px-4 py-3 font-medium">${m ? esc(m.name) : '<span class="text-gray-400">Unknown</span>'}</td>
+                  <td class="px-4 py-3 text-gray-500">${m ? esc(m.membershipType) : '—'}</td>
+                  <td class="px-4 py-3 text-gray-600">${fmtDateTime(c.checkedInAt)}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button class="text-xs text-gray-400 hover:text-red-500 transition-colors btn-delete-checkin" data-id="${c.id}">Delete</button>
+                  </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">No check-ins yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════ MEMBER MODAL ═════════════
+async function openMemberView(id) {
+  const [m, memberCheckins, memberNotes] = await Promise.all([
+    Members.get(id),
+    Checkins.forMember(id),
+    Notes.forMember(id),
+  ]);
+  if (!m) return;
+
+  const sorted = [...memberCheckins].sort((a,b) => b.checkedInAt.localeCompare(a.checkedInAt));
+
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
+        <div>
+          <h2 class="text-lg font-semibold">${esc(m.name)}</h2>
+          <div class="flex items-center gap-2 mt-1">${statusBadge(m.status)} <span class="text-sm text-gray-500">${esc(m.membershipType)}</span></div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-ghost text-xs" id="btn-modal-edit-member" data-id="${m.id}">Edit</button>
+          <button class="btn-ghost text-xs text-red-600 border-red-200 hover:bg-red-50" id="btn-modal-delete-member" data-id="${m.id}">Delete</button>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 space-y-1 text-sm border-b border-gray-100">
+        <div class="flex gap-2"><span class="text-gray-400 w-16">Email</span>${m.email ? `<a href="mailto:${esc(m.email)}" class="text-brand hover:underline truncate">${esc(m.email)}</a>` : '<span class="text-gray-400">—</span>'}</div>
+        <div class="flex gap-2"><span class="text-gray-400 w-16">Phone</span>${m.phone ? `<a href="tel:${esc(m.phone)}" class="text-brand hover:underline">${esc(m.phone)}</a>` : '<span class="text-gray-400">—</span>'}</div>
+        <div class="flex gap-2"><span class="text-gray-400 w-16">Joined</span><span>${fmtDate(m.joinedDate)}</span></div>
+      </div>
+
+      <!-- Check-ins -->
+      <div class="px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-medium text-sm">Check-ins (${sorted.length})</h3>
+          <button class="btn-primary text-xs py-1 px-2 btn" id="btn-quick-checkin" data-id="${m.id}">+ Check in now</button>
+        </div>
+        <div class="space-y-1 max-h-32 overflow-y-auto">
+          ${sorted.slice(0,10).map(c => `
+            <div class="text-xs text-gray-500 flex justify-between">
+              <span>${fmtDateTime(c.checkedInAt)}</span>
+            </div>`).join('') || '<div class="text-xs text-gray-400">No check-ins yet.</div>'}
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="px-6 py-4">
+        <h3 class="font-medium text-sm mb-3">Notes</h3>
+        <div class="space-y-2 mb-3 max-h-32 overflow-y-auto">
+          ${memberNotes.map(n => `
+            <div class="bg-gray-50 rounded-lg p-3 text-sm">
+              <p class="text-gray-700">${esc(n.content)}</p>
+              <p class="text-xs text-gray-400 mt-1">${fmtDate(n.createdAt)}</p>
+            </div>`).join('') || '<div class="text-xs text-gray-400 mb-2">No notes yet.</div>'}
+        </div>
+        <div class="flex gap-2">
+          <input class="input flex-1 text-sm" id="new-note-input" placeholder="Add a note…" />
+          <button class="btn-primary btn text-xs" id="btn-save-note" data-id="${m.id}">Save</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+function memberFormModal(m = {}) {
+  const isEdit = !!m.id;
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <h2 class="text-lg font-semibold">${isEdit ? 'Edit Member' : 'Add Member'}</h2>
+      </div>
+      <form id="member-form" class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input class="input" name="name" value="${esc(m.name)}" required />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input class="input" name="phone" value="${esc(m.phone)}" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input class="input" type="email" name="email" value="${esc(m.email)}" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Membership Type</label>
+            <select class="select" name="membershipType">
+              ${['Monthly Unlimited','Annual','Pay Per Class','Foundations'].map(t =>
+                `<option ${m.membershipType === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select class="select" name="status">
+              ${['active','inactive','frozen'].map(s =>
+                `<option ${m.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
+          <input class="input" type="date" name="joinedDate" value="${m.joinedDate ?? ''}" />
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="btn-primary flex-1">${isEdit ? 'Save Changes' : 'Add Member'}</button>
+          ${isEdit ? `<button type="button" id="btn-delete-member" data-id="${m.id}" class="btn-ghost text-red-600 border-red-200 hover:bg-red-50">Delete</button>` : ''}
+          <button type="button" id="btn-modal-close" class="btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>`);
+}
+
+function leadFormModal(l = {}) {
+  const isEdit = !!l.id;
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <h2 class="text-lg font-semibold">${isEdit ? 'Edit Lead' : 'Add Lead'}</h2>
+      </div>
+      <form id="lead-form" class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input class="input" name="name" value="${esc(l.name)}" required />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input class="input" name="phone" value="${esc(l.phone)}" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input class="input" type="email" name="email" value="${esc(l.email)}" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
+            <select class="select" name="source">
+              ${['Referral','Social Media','Website','Walk-in','Event','Other'].map(s =>
+                `<option ${l.source === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select class="select" name="status">
+              ${LEAD_COLS.map(s =>
+                `<option value="${s}" ${(l.status ?? 'new') === s ? 'selected' : ''}>${LEAD_COL_META[s].label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+            <input class="input" type="date" name="followUpDate" value="${l.followUpDate ?? ''}" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Trial Class Date</label>
+            <input class="input" type="date" name="trialDate" value="${l.trialDate ?? ''}" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <textarea class="input" name="notes" rows="2">${esc(l.notes)}</textarea>
+        </div>
+        ${isEdit ? `
+        <div class="border-t border-gray-100 pt-4">
+          <button type="button" id="btn-convert-lead" data-id="${l.id}"
+            class="w-full btn border-2 border-green-500 text-green-700 hover:bg-green-50 font-semibold justify-center">
+            ✓ Convert to Member
+          </button>
+        </div>` : ''}
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="btn-primary flex-1">${isEdit ? 'Save Changes' : 'Add Lead'}</button>
+          ${isEdit ? `<button type="button" id="btn-delete-lead" data-id="${l.id}" class="btn-ghost text-red-600 border-red-200 hover:bg-red-50">Delete</button>` : ''}
+          <button type="button" id="btn-modal-close" class="btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>`);
+}
+
+async function leadDetailModal(lead) {
+  const activities = await LeadActivities.forLead(lead.id);
+  const sorted = [...activities].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const fuOverdue = lead.followUpDate && lead.followUpDate < todayStr;
+  const fuToday   = lead.followUpDate && lead.followUpDate === todayStr;
+
+  const typeIcons = { Call: '📞', WhatsApp: '💬', Email: '📧', Meeting: '🤝', Trial: '✅', Note: '📝' };
+
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
+        <div>
+          <h2 class="text-lg font-semibold">${esc(lead.name)}</h2>
+          <div class="flex items-center gap-2 mt-1">
+            ${statusBadge(lead.status)}
+            <span class="text-sm text-gray-400">${esc(lead.source)}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-ghost text-xs" id="btn-lead-edit" data-id="${lead.id}">Edit</button>
+          <button class="btn-ghost text-xs text-red-600 border-red-200 hover:bg-red-50" id="btn-lead-delete" data-id="${lead.id}">Delete</button>
+        </div>
+      </div>
+
+      <!-- Contact info -->
+      <div class="px-6 py-3 space-y-2 text-sm border-b border-gray-100">
+        ${lead.phone ? `<div class="flex items-center gap-3">
+          <span class="text-gray-400 w-12 shrink-0">Phone</span>
+          <a href="tel:${esc(lead.phone)}" class="text-brand hover:underline">${esc(lead.phone)}</a>
+          ${waBtn(lead.phone, 'ml-1')}
+        </div>` : ''}
+        ${lead.email ? `<div class="flex items-center gap-3">
+          <span class="text-gray-400 w-12 shrink-0">Email</span>
+          <a href="mailto:${esc(lead.email)}" class="text-brand hover:underline truncate">${esc(lead.email)}</a>
+        </div>` : ''}
+        <div class="flex gap-3"><span class="text-gray-400 w-12 shrink-0">Added</span><span>${fmtDate(lead.createdAt)}</span></div>
+        ${lead.notes ? `<div class="flex gap-3"><span class="text-gray-400 w-12 shrink-0">Notes</span><span class="text-gray-600">${esc(lead.notes)}</span></div>` : ''}
+      </div>
+
+      <!-- Follow-up date -->
+      <div class="px-6 py-3 border-b border-gray-100 flex items-center gap-3">
+        <span class="text-sm text-gray-500 shrink-0 w-16">Follow-up</span>
+        <input type="date" id="followup-date-input" value="${lead.followUpDate ?? ''}"
+          class="input text-sm flex-1 ${fuOverdue ? 'border-red-400 bg-red-50' : fuToday ? 'border-orange-400 bg-orange-50' : ''}" />
+        <button id="btn-save-followup" data-id="${lead.id}" class="btn-ghost text-xs py-1 px-3">Save</button>
+        ${lead.followUpDate ? `<button id="btn-clear-followup" data-id="${lead.id}" class="text-xs text-gray-400 hover:text-red-500">Clear</button>` : ''}
+      </div>
+
+      <!-- Trial class date -->
+      ${(() => {
+        const td = lead.trialDate;
+        const trialPast   = td && td < todayStr;
+        const trialToday  = td && td === todayStr;
+        const trialFuture = td && td > todayStr;
+        return `<div class="px-6 py-3 border-b border-gray-100 flex items-center gap-3">
+          <span class="text-sm text-gray-500 shrink-0 w-16">Trial</span>
+          <input type="date" id="trial-date-input" value="${td ?? ''}"
+            class="input text-sm flex-1 ${trialToday ? 'border-green-400 bg-green-50' : trialFuture ? 'border-blue-300 bg-blue-50' : ''}" />
+          <button id="btn-save-trial" data-id="${lead.id}" class="btn-ghost text-xs py-1 px-3">Save</button>
+          ${td ? `<button id="btn-clear-trial" data-id="${lead.id}" class="text-xs text-gray-400 hover:text-red-500">Clear</button>` : ''}
+        </div>
+        ${td ? `<div class="px-6 pb-2">
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium ${trialToday ? 'bg-green-100 text-green-700' : trialFuture ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}">
+            ${trialToday ? '🎯 Trial today!' : trialFuture ? `🎯 Trial booked · ${fmtDate(td)}` : `🎯 Trial was ${fmtDate(td)}`}
+          </span>
+        </div>` : ''}`;
+      })()}
+
+      <!-- Activity log -->
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="font-medium text-sm mb-3">Activity (${sorted.length})</h3>
+        <div class="space-y-2 max-h-44 overflow-y-auto">
+          ${sorted.map(a => `
+            <div class="flex gap-3 text-sm group">
+              <span class="text-base shrink-0 mt-0.5">${typeIcons[a.type] ?? '📝'}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-xs text-gray-500">${a.type}</span>
+                  <span class="text-xs text-gray-400">${fmtDateTime(a.createdAt)}</span>
+                </div>
+                <p class="text-gray-700 text-sm">${esc(a.content)}</p>
+              </div>
+              <button class="btn-delete-activity text-xs text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" data-id="${a.id}" data-leadid="${lead.id}">✕</button>
+            </div>
+          `).join('') || '<p class="text-xs text-gray-400">No activity logged yet.</p>'}
+        </div>
+      </div>
+
+      <!-- Log activity -->
+      <div class="px-6 py-4">
+        <h3 class="font-medium text-sm mb-3">Log Activity</h3>
+        <div class="flex gap-2 mb-2">
+          ${['Call','WhatsApp','Email','Meeting','Trial','Note'].map(t =>
+            `<button class="btn-activity-type px-2 py-1 rounded-md text-xs border border-gray-200 hover:border-brand hover:text-brand transition-colors" data-type="${t}">${typeIcons[t]} ${t}</button>`
+          ).join('')}
+        </div>
+        <div class="flex gap-2">
+          <input class="input flex-1 text-sm" id="activity-input" placeholder="What happened? What's next?" />
+          <button id="btn-log-activity" data-id="${lead.id}" class="btn-primary btn text-xs shrink-0">Log</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+function convertLeadModal(lead) {
+  const today = new Date().toISOString().slice(0, 10);
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <h2 class="text-lg font-semibold">Convert to Member</h2>
+        <p class="text-sm text-gray-500 mt-1">Confirm details for ${esc(lead.name)}</p>
+      </div>
+      <form id="convert-form" class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input class="input" name="name" value="${esc(lead.name)}" required />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input class="input" name="phone" value="${esc(lead.phone)}" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input class="input" type="email" name="email" value="${esc(lead.email)}" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Membership Type</label>
+            <select class="select" name="membershipType">
+              ${['Monthly Unlimited','Annual','Pay Per Class','Foundations'].map(t => `<option>${t}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
+            <input class="input" type="date" name="joinedDate" value="${today}" />
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-700">
+          This will create a new active member and mark the lead as converted.
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="btn-primary flex-1 bg-green-600 hover:bg-green-700">✓ Create Member</button>
+          <button type="button" id="btn-modal-close" class="btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>`);
+}
+
+function importLeadsModal() {
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <h2 class="text-lg font-semibold">Import Leads</h2>
+        <p class="text-sm text-gray-500 mt-1">Upload a CSV file or paste a published Google Sheets URL</p>
+      </div>
+      <div class="px-6 py-5 space-y-5">
+
+        <!-- Source tabs -->
+        <div class="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
+          <button id="tab-file" class="flex-1 py-2 bg-brand text-white transition-colors">CSV File</button>
+          <button id="tab-url"  class="flex-1 py-2 text-gray-600 hover:bg-gray-50 transition-colors">Google Sheets URL</button>
+        </div>
+
+        <!-- File input -->
+        <div id="import-file-section" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Choose a CSV file</label>
+          <input type="file" id="import-file" accept=".csv,text/csv"
+            class="block w-full text-sm text-gray-500 cursor-pointer
+              file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+              file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
+          <p class="text-xs text-gray-400">First row must be column headers. Required column: <strong>Name</strong>. Optional: Email, Phone, Source, Status, Notes.</p>
+        </div>
+
+        <!-- Google Sheets URL input -->
+        <div id="import-url-section" class="hidden space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Published CSV URL</label>
+          <input class="input" id="import-url" placeholder="https://docs.google.com/spreadsheets/d/…/pub?output=csv" />
+          <p class="text-xs text-gray-400">In Google Sheets: <strong>File → Share → Publish to web → Comma-separated values (.csv) → Publish</strong>, then paste the link here.</p>
+          <button id="btn-load-url" class="btn-ghost w-full justify-center text-sm">Load Sheet</button>
+        </div>
+
+        <!-- Preview (hidden until CSV loaded) -->
+        <div id="import-preview" class="hidden space-y-3">
+          <div id="import-col-map" class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1"></div>
+          <div id="import-table-wrap" class="max-h-52 overflow-y-auto rounded-lg border border-gray-200 text-sm"></div>
+          <p id="import-count" class="text-sm font-medium text-gray-700"></p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-1">
+          <button id="btn-confirm-import" class="btn-primary flex-1 hidden">Import Leads</button>
+          <button id="btn-modal-close" class="btn-ghost flex-1">Cancel</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+// ── Backup & Restore ──────────────────────────────────────────────────────
+
+// ── Duplicate detection ────────────────────────────────────────────────────
+function normPhone(p) { return (p ?? '').replace(/\D/g, ''); }
+function normEmail(e) { return (e ?? '').toLowerCase().trim(); }
+
+function findDuplicate(candidate, existingLeads) {
+  const email = normEmail(candidate.email);
+  const phone = normPhone(candidate.phone);
+  return existingLeads.find(l =>
+    (email && normEmail(l.email) === email) ||
+    (phone.length >= 7 && normPhone(l.phone) === phone)
+  ) ?? null;
+}
+
+// ── Google Sheet sync ──────────────────────────────────────────────────────
+const SHEET_URL_KEY = 'cfb_sheet_url';
+
+// ── WhatsApp templates ─────────────────────────────────────────────────────
+const TEMPLATES_KEY = 'cfb_wa_templates';
+const DEFAULT_TEMPLATES = {
+  message1:     "Hi {{name}}! 👋 I saw you were interested in CrossFit Barnsley. We'd love to have you in for a free taster session — when are you free this week? 💪",
+  message2:     "Hey {{name}}, just following up on my last message! We've got some great class times available and would love to get you in. Any questions at all just ask 🏋️",
+  last_message: "Hi {{name}}, I don't want to keep bothering you but I wanted to reach out one last time. Whenever you're ready to start your CrossFit journey, we'll be here for you at CrossFit Barnsley 💙",
+};
+function getTemplates() {
+  try { return { ...DEFAULT_TEMPLATES, ...JSON.parse(localStorage.getItem(TEMPLATES_KEY) ?? '{}') }; }
+  catch { return { ...DEFAULT_TEMPLATES }; }
+}
+function applyTemplate(template, lead) {
+  const firstName = (lead.name ?? '').split(' ')[0];
+  return template.replace(/\{\{name\}\}/gi, firstName);
+}
+function waTemplateLink(phone, message) {
+  const link = waLink(phone);
+  if (!link) return null;
+  return `${link}&text=${encodeURIComponent(message)}`;
+}
+
+function toSheetCsvUrl(raw) {
+  const url = raw.trim();
+  // Already a published CSV URL
+  if (url.includes('/pub') && url.includes('output=csv')) return url;
+  // Already an export CSV URL
+  if (url.includes('/export') && url.includes('format=csv')) return url;
+  // Regular edit / view / share URL — extract sheet ID and convert
+  const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (idMatch) {
+    const gidMatch = url.match(/[#&?]gid=(\d+)/);
+    const gid = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/${idMatch[1]}/pub?output=csv${gid}`;
+  }
+  return url;
+}
+
+async function syncLeadsFromUrl(url) {
+  const csvUrl = toSheetCsvUrl(url);
+  let text;
+  try {
+    const res = await fetch(csvUrl);
+    if (res.status === 401 || res.status === 403) {
+      showToast('Access denied — make sure the sheet is published publicly (File → Share → Publish to web → CSV)');
+      return;
+    }
+    if (!res.ok) {
+      showToast(`Sheet returned an error (${res.status}) — check the URL is correct`);
+      return;
+    }
+    text = await res.text();
+  } catch (err) {
+    const msg = (err?.message ?? '').toLowerCase();
+    if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load')) {
+      showToast('Could not reach the sheet — if the app is open as a local file (file://) try using the ↑ Import button and upload a CSV instead');
+    } else {
+      showToast(`Sync failed: ${err?.message ?? 'unknown error'}`);
+    }
+    return;
+  }
+
+  const { headers, rows } = parseCSV(text);
+  if (!headers.length) { showToast('Could not read CSV from the sheet'); return; }
+
+  const colMap = detectLeadColumns(headers);
+  if (!colMap.name) { showToast('No "name" column found in the sheet'); return; }
+
+  const existing = await Leads.list();
+  const validStatuses = new Set(LEAD_COLS);
+  let added = 0, skipped = 0;
+
+  for (const r of rows) {
+    const name = (colMap.name ? r[colMap.name] : '').trim();
+    if (!name) continue;
+    const candidate = {
+      name,
+      email:  (colMap.email  ? r[colMap.email]  : '').trim(),
+      phone:  (colMap.phone  ? r[colMap.phone]  : '').trim(),
+      source: (colMap.source ? r[colMap.source] : 'Other').trim() || 'Other',
+      status: validStatuses.has((colMap.status ? r[colMap.status] : '').toLowerCase().trim())
+                ? (colMap.status ? r[colMap.status] : 'new').toLowerCase().trim() : 'new',
+      notes:  (colMap.notes  ? r[colMap.notes]  : '').trim(),
+    };
+    if (findDuplicate(candidate, existing)) { skipped++; continue; }
+    await Leads.save(candidate);
+    existing.push(candidate); // prevent intra-batch dupes
+    added++;
+  }
+
+  showToast(`✓ Sync complete — ${added} added, ${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped`);
+  render();
+}
+
+async function backupAll() {
+  const [members, leads, leadActivities, checkins, notes] = await Promise.all([
+    _all('members'), _all('leads'), _all('leadActivities'), _all('checkins'), _all('notes')
+  ]);
+  const payload = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), members, leads, leadActivities, checkins, notes }, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cfb-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function restoreAll(json) {
+  const data = JSON.parse(json);
+  const stores = ['members','leads','leadActivities','checkins','notes'];
+  // Clear all stores then re-populate
+  await Promise.all(stores.map(s => new Promise((res, rej) => {
+    const r = _db.transaction(s, 'readwrite').objectStore(s).clear();
+    r.onsuccess = res; r.onerror = rej;
+  })));
+  for (const s of stores) {
+    const rows = data[s] ?? [];
+    for (const row of rows) await _put(s, row);
+  }
+}
+
+async function weeklySummaryModal() {
+  // Week bounds: Monday 00:00 → Sunday 23:59
+  const now = new Date();
+  const dow = now.getDay();
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() + mondayOffset);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  const weekStartStr = weekStart.toISOString().slice(0, 10);
+  const weekEndStr   = weekEnd.toISOString().slice(0, 10);
+  const weekStartISO = weekStart.toISOString();
+
+  const [leads, members, activities] = await Promise.all([
+    Leads.list(), Members.list(), _all('leadActivities')
+  ]);
+
+  // New leads added this week
+  const newLeads = leads.filter(l => l.createdAt >= weekStartISO);
+
+  // Trials held or booked this week
+  const trialsThisWeek = leads.filter(l => l.trialDate >= weekStartStr && l.trialDate <= weekEndStr);
+  const trialsPast     = trialsThisWeek.filter(l => l.trialDate <= now.toISOString().slice(0, 10));
+  const trialsFuture   = trialsThisWeek.filter(l => l.trialDate > now.toISOString().slice(0, 10));
+
+  // Conversions: members who joined this week
+  const newMembers = members.filter(m => m.createdAt >= weekStartISO);
+
+  // Activities logged this week
+  const weekActivities = activities.filter(a => a.createdAt >= weekStartISO);
+  const actByType = {};
+  for (const a of weekActivities) actByType[a.type] = (actByType[a.type] ?? 0) + 1;
+
+  // Pipeline snapshot
+  const byStatus = Object.fromEntries(LEAD_COLS.map(s => [s, 0]));
+  for (const l of leads) if (byStatus[l.status] !== undefined) byStatus[l.status]++;
+
+  // Source breakdown for new leads
+  const bySource = {};
+  for (const l of newLeads) bySource[l.source] = (bySource[l.source] ?? 0) + 1;
+
+  const weekLabel = `${weekStart.toLocaleDateString('en-GB', { day:'numeric', month:'short' })} – ${weekEnd.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}`;
+  const typeIcons = { Call:'📞', WhatsApp:'💬', Email:'📧', Meeting:'🤝', Trial:'✅', Note:'📝' };
+
+  function section(title, count, badge, body) {
+    return `
+      <div class="border-b border-gray-100 px-6 py-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-sm text-gray-800">${title}</h3>
+          <span class="badge ${badge}">${count}</span>
+        </div>
+        ${body}
+      </div>`;
+  }
+
+  modal(`
+    <div class="modal max-w-lg">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold">Weekly Summary</h2>
+          <p class="text-xs text-gray-400 mt-0.5">${weekLabel}</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-copy-summary" class="btn-ghost text-xs">Copy</button>
+          <button id="btn-modal-close" class="btn-ghost text-xs">Close</button>
+        </div>
+      </div>
+
+      <div class="overflow-y-auto max-h-[70vh]">
+
+        ${section('New Leads', newLeads.length, newLeads.length ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-500',
+          newLeads.length
+            ? `<div class="space-y-1">
+                ${newLeads.map(l => `
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="font-medium">${esc(l.name)}</span>
+                    <span class="text-xs text-gray-400">${esc(l.source)}</span>
+                  </div>`).join('')}
+               </div>
+               ${Object.keys(bySource).length > 1 ? `<div class="mt-2 flex flex-wrap gap-1">${Object.entries(bySource).map(([s,n]) => `<span class="badge bg-gray-100 text-gray-600">${esc(s)}: ${n}</span>`).join('')}</div>` : ''}`
+            : '<p class="text-sm text-gray-400">No new leads this week.</p>'
+        )}
+
+        ${section('Trials', trialsThisWeek.length, trialsThisWeek.length ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500',
+          trialsThisWeek.length
+            ? `<div class="space-y-1">
+                ${trialsPast.map(l => `
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="font-medium">${esc(l.name)}</span>
+                    <span class="text-xs ${l.status === 'converted' ? 'text-green-600 font-medium' : 'text-gray-400'}">${fmtDate(l.trialDate)} · ${l.status === 'converted' ? '✓ Converted' : l.status}</span>
+                  </div>`).join('')}
+                ${trialsFuture.map(l => `
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="font-medium">${esc(l.name)}</span>
+                    <span class="text-xs text-blue-500">Upcoming · ${fmtDate(l.trialDate)}</span>
+                  </div>`).join('')}
+               </div>`
+            : '<p class="text-sm text-gray-400">No trials this week.</p>'
+        )}
+
+        ${section('Converted to Members', newMembers.length, newMembers.length ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500',
+          newMembers.length
+            ? `<div class="space-y-1">
+                ${newMembers.map(m => `
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="font-medium">${esc(m.name)}</span>
+                    <span class="text-xs text-gray-400">${esc(m.membershipType)}</span>
+                  </div>`).join('')}
+               </div>`
+            : '<p class="text-sm text-gray-400">No conversions this week.</p>'
+        )}
+
+        ${section('Activity Logged', weekActivities.length, weekActivities.length ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500',
+          weekActivities.length
+            ? `<div class="flex flex-wrap gap-2">
+                ${Object.entries(actByType).sort((a,b) => b[1]-a[1]).map(([type, n]) =>
+                  `<span class="badge bg-gray-100 text-gray-700">${typeIcons[type] ?? '📝'} ${type}: ${n}</span>`
+                ).join('')}
+               </div>`
+            : '<p class="text-sm text-gray-400">No activity logged this week.</p>'
+        )}
+
+        <!-- Pipeline snapshot -->
+        <div class="px-6 py-4">
+          <h3 class="font-semibold text-sm text-gray-800 mb-3">Pipeline Snapshot</h3>
+          <div class="grid grid-cols-5 gap-2 text-center">
+            ${LEAD_COLS.map(s => `<div class="${LEAD_COL_META[s].color} border rounded-lg p-2"><div class="text-lg font-bold text-gray-700">${byStatus[s]}</div><div class="text-xs text-gray-500 mt-0.5">${LEAD_COL_META[s].label}</div></div>`).join('')}
+          </div>
+        </div>
+
+      </div>
+    </div>`);
+
+  document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+
+  document.getElementById('btn-copy-summary').addEventListener('click', () => {
+    const lines = [
+      `CrossFit Barnsley — Weekly Summary`,
+      `${weekLabel}`,
+      ``,
+      `New Leads: ${newLeads.length}`,
+      ...newLeads.map(l => `  • ${l.name} (${l.source})`),
+      ``,
+      `Trials: ${trialsThisWeek.length}`,
+      ...trialsPast.map(l => `  • ${l.name} — ${fmtDate(l.trialDate)}${l.status === 'converted' ? ' ✓ Converted' : ''}`),
+      ...trialsFuture.map(l => `  • ${l.name} — ${fmtDate(l.trialDate)} (upcoming)`),
+      ``,
+      `New Members: ${newMembers.length}`,
+      ...newMembers.map(m => `  • ${m.name} (${m.membershipType})`),
+      ``,
+      `Activity Logged: ${weekActivities.length}`,
+      ...Object.entries(actByType).map(([t, n]) => `  • ${t}: ${n}`),
+      ``,
+      `Pipeline: ${LEAD_COLS.map(s => `${LEAD_COL_META[s].label} ${byStatus[s]}`).join(' · ')}`,
+    ];
+    navigator.clipboard.writeText(lines.join('\n'))
+      .then(() => showToast('✓ Summary copied to clipboard'))
+      .catch(() => showToast('Could not copy — try manually'));
+  });
+}
+
+function settingsModal() {
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Settings & Backup</h2>
+        <button id="btn-modal-close" class="btn-ghost text-xs">Close</button>
+      </div>
+
+      <div class="px-6 py-5 space-y-6">
+
+        <!-- Backup -->
+        <div>
+          <h3 class="font-medium text-sm text-gray-900 mb-1">Backup data</h3>
+          <p class="text-xs text-gray-500 mb-3">Downloads all members, leads, activities, check-ins and notes as a single JSON file. Save it somewhere safe — Google Drive, email it to yourself, USB drive.</p>
+          <button id="btn-backup" class="btn-primary w-full justify-center">↓ Download Backup</button>
+        </div>
+
+        <div class="border-t border-gray-100"></div>
+
+        <!-- Restore -->
+        <div>
+          <h3 class="font-medium text-sm text-gray-900 mb-1">Restore from backup</h3>
+          <p class="text-xs text-gray-500 mb-3">Choose a backup file to restore. <strong class="text-red-600">This will replace all current data.</strong> Make a backup first if you have anything you want to keep.</p>
+          <input type="file" id="restore-file" accept=".json,application/json"
+            class="block w-full text-sm text-gray-500 cursor-pointer mb-3
+              file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+              file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
+          <div id="restore-preview" class="hidden bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1 mb-3"></div>
+          <button id="btn-restore" class="hidden w-full btn border border-red-300 text-red-700 hover:bg-red-50 justify-center">↑ Restore This Backup</button>
+        </div>
+
+        <div class="border-t border-gray-100"></div>
+
+        <!-- WhatsApp templates -->
+        <div>
+          <h3 class="font-medium text-sm text-gray-900 mb-1">WhatsApp Message Templates</h3>
+          <p class="text-xs text-gray-500 mb-3">Use <strong>{{name}}</strong> and it will be replaced with the lead's first name when sent.</p>
+          ${(() => {
+            const tmpls = getTemplates();
+            const labels = { message1: 'Message 1', message2: 'Message 2', last_message: 'Last Message' };
+            return Object.entries(labels).map(([key, label]) => `
+              <div class="mb-3">
+                <label class="block text-xs font-medium text-gray-600 mb-1">${label}</label>
+                <textarea id="tmpl-${key}" class="input text-sm" rows="3">${esc(tmpls[key] ?? '')}</textarea>
+              </div>`).join('');
+          })()}
+          <button id="btn-save-templates" class="btn-primary w-full justify-center text-sm">Save Templates</button>
+        </div>
+
+        <div class="border-t border-gray-100"></div>
+
+        <!-- Google Sheet sync -->
+        <div>
+          <h3 class="font-medium text-sm text-gray-900 mb-1">Google Sheet auto-sync</h3>
+          <p class="text-xs text-gray-500 mb-3">
+            Paste any Google Sheets URL below — the app will convert it automatically.<br><br>
+            <strong>To publish your sheet:</strong> In Google Sheets go to <strong>File → Share → Publish to web → select your sheet → CSV → Publish</strong>, then copy the URL. Or just paste the normal sheet URL and the app will convert it for you.
+          </p>
+          <input class="input text-sm mb-2" id="sheet-url-input" type="url"
+            placeholder="Paste any Google Sheets URL…"
+            value="${localStorage.getItem(SHEET_URL_KEY) ?? ''}" />
+          ${localStorage.getItem(SHEET_URL_KEY) ? `
+          <p class="text-xs text-gray-400 mb-2">
+            CSV URL: <span class="font-mono break-all">${toSheetCsvUrl(localStorage.getItem(SHEET_URL_KEY))}</span>
+            — <a href="${toSheetCsvUrl(localStorage.getItem(SHEET_URL_KEY))}" target="_blank" class="text-brand hover:underline">Test in browser ↗</a>
+          </p>` : ''}
+          <div class="flex gap-2">
+            <button id="btn-save-sheet-url" class="btn-primary flex-1 text-sm">Save URL</button>
+            <button id="btn-sync-now" class="btn-ghost flex-1 text-sm" ${localStorage.getItem(SHEET_URL_KEY) ? '' : 'disabled'}>Sync Now</button>
+          </div>
+          <p id="sheet-url-status" class="text-xs text-gray-400 mt-2">${localStorage.getItem(SHEET_URL_KEY) ? '✓ URL saved — click "Test in browser" first to confirm it loads, then Sync Now.' : 'No URL saved yet.'}</p>
+        </div>
+
+        <div class="border-t border-gray-100"></div>
+
+        <!-- Danger zone -->
+        <div>
+          <h3 class="font-medium text-sm text-gray-900 mb-1">Clear all data</h3>
+          <p class="text-xs text-gray-500 mb-3">Wipes everything and reloads the demo data. Useful for starting fresh.</p>
+          <button id="btn-clear-all" class="w-full btn border border-red-300 text-red-700 hover:bg-red-50 justify-center">✕ Clear All Data</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+function checkinModal(memberList) {
+  modal(`
+    <div class="modal">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <h2 class="text-lg font-semibold">Log Check-in</h2>
+      </div>
+      <form id="checkin-form" class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Member</label>
+          <select class="select" name="memberId" required>
+            <option value="">Select a member…</option>
+            ${memberList.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="btn-primary flex-1">Log Check-in</button>
+          <button type="button" id="btn-modal-close" class="btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════ EVENT HANDLERS ═══════════
+function attachHandlers(page) {
+  const content = document.getElementById('page-content');
+
+  // Close modal on escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  }, { once: true });
+
+  // ── Dashboard ──
+  if (page === 'dashboard') {
+    const widget = content.querySelector('#quick-checkin-widget');
+    const input  = content.querySelector('#checkin-search');
+    const results = content.querySelector('#checkin-results');
+    const membersList = JSON.parse(widget.dataset.members);
+
+    input.addEventListener('input', () => {
+      const q = input.value.toLowerCase().trim();
+      if (!q) { results.innerHTML = ''; return; }
+      const matches = membersList.filter(m => m.name.toLowerCase().includes(q)).slice(0, 6);
+      results.innerHTML = matches.length
+        ? matches.map(m => `
+            <div class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 border border-gray-100">
+              <div>
+                <span class="text-sm font-medium">${esc(m.name)}</span>
+                <span class="text-xs text-gray-400 ml-2">${esc(m.membershipType)}</span>
+              </div>
+              <button class="btn-primary text-xs py-1 px-3 btn btn-do-checkin" data-id="${m.id}" data-name="${esc(m.name)}">
+                Check in
+              </button>
+            </div>`).join('')
+        : '<p class="text-sm text-gray-400 px-1">No active members match.</p>';
+
+      results.querySelectorAll('.btn-do-checkin').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await Checkins.add(Number(btn.dataset.id));
+          showToast(`✓ ${btn.dataset.name} checked in`);
+          input.value = '';
+          results.innerHTML = '';
+          input.focus();
+        });
+      });
+    });
+
+    input.focus();
+
+    content.querySelector('#btn-weekly-summary')?.addEventListener('click', () => weeklySummaryModal());
+
+    // Follow-up row clicks on dashboard → open lead detail
+    content.querySelectorAll('.btn-open-lead').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const lead = await Leads.get(Number(btn.dataset.id));
+        if (lead) { await leadDetailModal(lead); attachLeadDetailHandlers(lead); }
+      });
+    });
+
+    return;
+  }
+
+  // ── Members ──
+  if (page === 'members') {
+    content.querySelector('#btn-export-members')?.addEventListener('click', async () => {
+      const list = await Members.list();
+      const csv = toCSV(list, [
+        { label: 'Name',            get: m => m.name },
+        { label: 'Phone',           get: m => m.phone },
+        { label: 'Email',           get: m => m.email },
+        { label: 'Membership Type', get: m => m.membershipType },
+        { label: 'Status',          get: m => m.status },
+        { label: 'Joined Date',     get: m => m.joinedDate },
+      ]);
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCSV(`cfb-members-${date}.csv`, csv);
+    });
+
+    content.querySelector('#btn-add-member')?.addEventListener('click', () => memberFormModal());
+
+    // Search & filter
+    function filterMembers() {
+      const search = content.querySelector('#member-search').value.toLowerCase();
+      const status = content.querySelector('#member-filter-status').value;
+      Members.list().then(list => {
+        const filtered = list.filter(m => {
+          const matchSearch = !search || m.name.toLowerCase().includes(search) || m.email.toLowerCase().includes(search);
+          const matchStatus = !status || m.status === status;
+          return matchSearch && matchStatus;
+        });
+        content.querySelector('#members-tbody').innerHTML = renderMemberRows(filtered);
+        attachMemberRowHandlers();
+      });
+    }
+    content.querySelector('#member-search').addEventListener('input', filterMembers);
+    content.querySelector('#member-filter-status').addEventListener('change', filterMembers);
+    attachMemberRowHandlers();
+  }
+
+  // ── Leads ──
+  if (page === 'leads') {
+    content.querySelector('#btn-sync-sheet')?.addEventListener('click', async (e) => {
+      const url = localStorage.getItem(SHEET_URL_KEY);
+      if (!url) return;
+      e.target.textContent = '⟳ Syncing…';
+      e.target.disabled = true;
+      await syncLeadsFromUrl(url);
+    });
+
+    content.querySelector('#btn-add-lead')?.addEventListener('click', () => {
+      leadFormModal();
+      attachLeadFormHandlers();
+    });
+
+    content.querySelector('#btn-import-leads')?.addEventListener('click', () => {
+      importLeadsModal();
+      let parsedRows = [], colMap = {};
+
+      function showPreview(text) {
+        const { headers, rows } = parseCSV(text);
+        if (!headers.length) { showToast('Could not read CSV — check the format'); return; }
+
+        colMap = detectLeadColumns(headers);
+
+        // Column mapping summary
+        const fields = { name:'Name', email:'Email', phone:'Phone', source:'Source', status:'Status', notes:'Notes' };
+        const mapHtml = Object.entries(fields).map(([k, label]) =>
+          colMap[k]
+            ? `<div class="flex gap-1"><span class="font-medium">${label}:</span><span class="text-gray-500">"${colMap[k]}" column</span></div>`
+            : `<div class="flex gap-1"><span class="font-medium">${label}:</span><span class="text-gray-400 italic">not found${k === 'name' ? ' ⚠️ required' : ''}</span></div>`
+        ).join('');
+        document.getElementById('import-col-map').innerHTML = mapHtml;
+
+        // Preview table (first 5 rows)
+        parsedRows = rows.filter(r => colMap.name && r[colMap.name]?.trim());
+        const preview = parsedRows.slice(0, 5);
+        const tableHtml = `
+          <table class="w-full text-xs">
+            <thead><tr class="bg-gray-50 text-gray-500">
+              <th class="px-3 py-2 text-left">Name</th>
+              <th class="px-3 py-2 text-left">Email</th>
+              <th class="px-3 py-2 text-left">Phone</th>
+              <th class="px-3 py-2 text-left">Source</th>
+              <th class="px-3 py-2 text-left">Status</th>
+            </tr></thead>
+            <tbody class="divide-y divide-gray-100">
+              ${preview.map(r => `<tr>
+                <td class="px-3 py-2 font-medium">${esc(r[colMap.name] ?? '')}</td>
+                <td class="px-3 py-2 text-gray-500">${esc(colMap.email ? r[colMap.email] : '')}</td>
+                <td class="px-3 py-2 text-gray-500">${esc(colMap.phone ? r[colMap.phone] : '')}</td>
+                <td class="px-3 py-2 text-gray-500">${esc(colMap.source ? r[colMap.source] : '')}</td>
+                <td class="px-3 py-2 text-gray-500">${esc(colMap.status ? r[colMap.status] : 'new')}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+        document.getElementById('import-table-wrap').innerHTML = tableHtml;
+        document.getElementById('import-count').textContent =
+          `${parsedRows.length} lead${parsedRows.length !== 1 ? 's' : ''} ready to import${parsedRows.length < rows.length ? ` (${rows.length - parsedRows.length} skipped — missing name)` : ''}.`;
+        document.getElementById('import-preview').classList.remove('hidden');
+        document.getElementById('btn-confirm-import').classList.remove('hidden');
+      }
+
+      // Tab switching
+      document.getElementById('tab-file').addEventListener('click', () => {
+        document.getElementById('tab-file').className = 'flex-1 py-2 bg-brand text-white transition-colors';
+        document.getElementById('tab-url').className  = 'flex-1 py-2 text-gray-600 hover:bg-gray-50 transition-colors';
+        document.getElementById('import-file-section').classList.remove('hidden');
+        document.getElementById('import-url-section').classList.add('hidden');
+      });
+      document.getElementById('tab-url').addEventListener('click', () => {
+        document.getElementById('tab-url').className  = 'flex-1 py-2 bg-brand text-white transition-colors';
+        document.getElementById('tab-file').className = 'flex-1 py-2 text-gray-600 hover:bg-gray-50 transition-colors';
+        document.getElementById('import-url-section').classList.remove('hidden');
+        document.getElementById('import-file-section').classList.add('hidden');
+      });
+
+      // File upload
+      document.getElementById('import-file').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => showPreview(ev.target.result);
+        reader.readAsText(file);
+      });
+
+      // Google Sheets URL fetch
+      document.getElementById('btn-load-url').addEventListener('click', async () => {
+        const url = document.getElementById('import-url').value.trim();
+        if (!url) return;
+        try {
+          document.getElementById('btn-load-url').textContent = 'Loading…';
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          showPreview(await res.text());
+        } catch (err) {
+          showToast('Failed to load sheet — make sure it is published as CSV');
+        } finally {
+          document.getElementById('btn-load-url').textContent = 'Load Sheet';
+        }
+      });
+
+      // Confirm import
+      document.getElementById('btn-confirm-import').addEventListener('click', async () => {
+        const validStatuses = new Set(LEAD_COLS);
+        const existing = await Leads.list();
+        let added = 0, dupes = 0;
+        for (const r of parsedRows) {
+          const rawStatus = (colMap.status ? r[colMap.status] : '').toLowerCase().trim();
+          const candidate = {
+            name:   (colMap.name   ? r[colMap.name]   : '').trim(),
+            email:  (colMap.email  ? r[colMap.email]  : '').trim(),
+            phone:  (colMap.phone  ? r[colMap.phone]  : '').trim(),
+            source: (colMap.source ? r[colMap.source] : 'Other').trim() || 'Other',
+            status: validStatuses.has(rawStatus) ? rawStatus : 'new',
+            notes:  (colMap.notes  ? r[colMap.notes]  : '').trim(),
+          };
+          if (findDuplicate(candidate, existing)) { dupes++; continue; }
+          await Leads.save(candidate);
+          existing.push(candidate);
+          added++;
+        }
+        showToast(`✓ ${added} imported${dupes ? `, ${dupes} duplicate${dupes !== 1 ? 's' : ''} skipped` : ''}`);
+        closeModal();
+        render();
+      });
+
+      document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+    });
+
+    // ── Search / filter ──
+    let dragId = null;
+
+    function attachKanbanHandlers() {
+      content.querySelectorAll('.btn-view-lead').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          dragId = card.dataset.id;
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => card.classList.add('opacity-40'), 0);
+        });
+        card.addEventListener('dragend', () => card.classList.remove('opacity-40'));
+        card.addEventListener('click', async () => {
+          document.querySelectorAll('.card-pressed').forEach(el => el.classList.remove('card-pressed'));
+          card.classList.add('card-pressed');
+          const lead = await Leads.get(Number(card.dataset.id));
+          if (lead) await openLeadDrawer(lead);
+        });
+      });
+
+      content.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          zone.classList.add('ring-2', 'ring-brand', 'ring-offset-1');
+        });
+        zone.addEventListener('dragleave', (e) => {
+          if (!zone.contains(e.relatedTarget))
+            zone.classList.remove('ring-2', 'ring-brand', 'ring-offset-1');
+        });
+        zone.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          zone.classList.remove('ring-2', 'ring-brand', 'ring-offset-1');
+          if (!dragId) return;
+          const newStatus = zone.dataset.status;
+          const lead = await Leads.get(Number(dragId));
+          if (lead && lead.status !== newStatus) {
+            await Leads.save({ ...lead, status: newStatus });
+            showToast(`${lead.name} → ${newStatus}`);
+            render();
+          }
+          dragId = null;
+        });
+      });
+
+      content.querySelectorAll('.btn-move-lead').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const lead = await Leads.get(Number(btn.dataset.id));
+          if (!lead) return;
+          const newStatus = btn.dataset.status;
+          await Leads.save({ ...lead, status: newStatus });
+          showToast(`${lead.name} → ${LEAD_COL_META[newStatus].label}`);
+          filterLeads();
+        });
+      });
+    }
+
+    async function filterLeads() {
+      const q   = content.querySelector('#leads-search').value.toLowerCase().trim();
+      const src = content.querySelector('#leads-filter-source').value;
+      const all = await Leads.list();
+      const filtered = all.filter(l => {
+        const matchQ   = !q   || l.name.toLowerCase().includes(q) || (l.phone||'').includes(q) || (l.email||'').toLowerCase().includes(q);
+        const matchSrc = !src || l.source === src;
+        return matchQ && matchSrc;
+      });
+      content.querySelector('#leads-kanban').innerHTML = renderKanban(filtered);
+      // Also update mobile list for whichever tab is active
+      const activeTab = content.querySelector('.mobile-status-tab.tab-active');
+      const mobileList = content.querySelector('#mobile-leads-list');
+      if (activeTab && mobileList) {
+        mobileList.innerHTML = renderMobileList(filtered, activeTab.dataset.status);
+      }
+      attachKanbanHandlers();
+    }
+
+    content.querySelector('#leads-search').addEventListener('input', filterLeads);
+    content.querySelector('#leads-filter-source').addEventListener('change', filterLeads);
+
+    // Mobile status tab switching
+    content.querySelectorAll('.mobile-status-tab').forEach(tab => {
+      tab.addEventListener('click', async () => {
+        content.querySelectorAll('.mobile-status-tab').forEach(t => {
+          t.classList.remove('bg-brand', 'text-white', 'tab-active');
+          t.classList.add('bg-gray-100', 'text-gray-600');
+        });
+        tab.classList.add('bg-brand', 'text-white', 'tab-active');
+        tab.classList.remove('bg-gray-100', 'text-gray-600');
+        const q   = content.querySelector('#leads-search').value.toLowerCase().trim();
+        const src = content.querySelector('#leads-filter-source').value;
+        const all = await Leads.list();
+        const filtered = all.filter(l => {
+          const matchQ   = !q || l.name.toLowerCase().includes(q) || (l.phone||'').includes(q) || (l.email||'').toLowerCase().includes(q);
+          const matchSrc = !src || l.source === src;
+          return matchQ && matchSrc;
+        });
+        content.querySelector('#mobile-leads-list').innerHTML = renderMobileList(filtered, tab.dataset.status);
+        attachKanbanHandlers();
+      });
+    });
+
+    attachKanbanHandlers();
+  }
+
+  // ── Check-ins ──
+  if (page === 'checkins') {
+    content.querySelector('#btn-add-checkin')?.addEventListener('click', async () => {
+      const list = await Members.list();
+      checkinModal(list.filter(m => m.status === 'active'));
+      document.getElementById('checkin-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const memberId = Number(fd.get('memberId'));
+        if (!memberId) return;
+        await Checkins.add(memberId);
+        closeModal();
+        render();
+      });
+      document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+    });
+
+    content.querySelector('#btn-export-checkins')?.addEventListener('click', async () => {
+      const [memberList, checkinList] = await Promise.all([Members.list(), Checkins.list()]);
+      const memberMap = Object.fromEntries(memberList.map(m => [m.id, m]));
+      const sorted = [...checkinList].sort((a, b) => b.checkedInAt.localeCompare(a.checkedInAt));
+      const csv = toCSV(sorted, [
+        { label: 'Member Name',     get: c => memberMap[c.memberId]?.name ?? '' },
+        { label: 'Membership Type', get: c => memberMap[c.memberId]?.membershipType ?? '' },
+        { label: 'Date',            get: c => new Date(c.checkedInAt).toLocaleDateString('en-GB') },
+        { label: 'Time',            get: c => new Date(c.checkedInAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
+      ]);
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCSV(`cfb-checkins-${date}.csv`, csv);
+    });
+
+    content.querySelectorAll('.btn-delete-checkin').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (confirm('Delete this check-in?')) {
+          await Checkins.delete(Number(btn.dataset.id));
+          render();
+        }
+      });
+    });
+  }
+}
+
+function attachMemberRowHandlers() {
+  const content = document.getElementById('page-content');
+
+  content.querySelectorAll('.btn-view-member').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await openMemberView(Number(btn.dataset.id));
+      attachMemberViewHandlers();
+    });
+  });
+
+  content.querySelectorAll('.btn-edit-member').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const m = await Members.get(Number(btn.dataset.id));
+      if (m) { memberFormModal(m); attachMemberFormHandlers(m.id); }
+    });
+  });
+}
+
+function attachMemberViewHandlers() {
+  document.getElementById('btn-modal-edit-member')?.addEventListener('click', async (e) => {
+    const m = await Members.get(Number(e.target.dataset.id));
+    if (m) { memberFormModal(m); attachMemberFormHandlers(m.id); }
+  });
+
+  document.getElementById('btn-modal-delete-member')?.addEventListener('click', async (e) => {
+    const m = await Members.get(Number(e.target.dataset.id));
+    if (m && confirm(`Delete ${m.name}? This cannot be undone.`)) {
+      await Members.delete(m.id);
+      closeModal();
+      render();
+    }
+  });
+
+  document.getElementById('btn-quick-checkin')?.addEventListener('click', async (e) => {
+    const id = Number(e.target.dataset.id);
+    await Checkins.add(id);
+    await openMemberView(id);
+    attachMemberViewHandlers();
+  });
+
+  document.getElementById('btn-save-note')?.addEventListener('click', async (e) => {
+    const id = Number(e.target.dataset.id);
+    const input = document.getElementById('new-note-input');
+    const content = input.value.trim();
+    if (!content) return;
+    await Notes.add(id, content);
+    input.value = '';
+    await openMemberView(id);
+    attachMemberViewHandlers();
+  });
+
+  document.getElementById('btn-modal-close')?.addEventListener('click', closeModal);
+}
+
+function attachMemberFormHandlers(existingId) {
+  document.getElementById('member-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const record = {
+      ...(existingId ? { id: existingId } : {}),
+      name:           fd.get('name'),
+      phone:          fd.get('phone'),
+      email:          fd.get('email'),
+      membershipType: fd.get('membershipType'),
+      status:         fd.get('status'),
+      joinedDate:     fd.get('joinedDate'),
+    };
+    await Members.save(record);
+    closeModal();
+    render();
+  });
+
+  document.getElementById('btn-delete-member')?.addEventListener('click', async (e) => {
+    if (confirm('Delete this member? This cannot be undone.')) {
+      await Members.delete(Number(e.target.dataset.id));
+      closeModal();
+      render();
+    }
+  });
+
+  document.getElementById('btn-modal-close')?.addEventListener('click', closeModal);
+}
+
+function attachLeadDetailHandlers(lead) {
+  let selectedType = 'Call';
+
+  // Activity type pills
+  document.querySelectorAll('.btn-activity-type').forEach(btn => {
+    if (btn.dataset.type === selectedType) btn.classList.add('border-brand', 'text-brand');
+    btn.addEventListener('click', () => {
+      selectedType = btn.dataset.type;
+      document.querySelectorAll('.btn-activity-type').forEach(b => {
+        b.classList.toggle('border-brand', b.dataset.type === selectedType);
+        b.classList.toggle('text-brand',   b.dataset.type === selectedType);
+      });
+    });
+  });
+
+  // Log activity
+  document.getElementById('btn-log-activity')?.addEventListener('click', async () => {
+    const input = document.getElementById('activity-input');
+    const content = input.value.trim();
+    if (!content) return;
+    await LeadActivities.add(lead.id, selectedType, content);
+    const updated = await Leads.get(lead.id);
+    await leadDetailModal(updated);
+    attachLeadDetailHandlers(updated);
+  });
+
+  // Save follow-up date
+  document.getElementById('btn-save-followup')?.addEventListener('click', async () => {
+    const date = document.getElementById('followup-date-input').value;
+    await Leads.save({ ...lead, followUpDate: date });
+    const updated = await Leads.get(lead.id);
+    await leadDetailModal(updated);
+    attachLeadDetailHandlers(updated);
+    showToast('Follow-up date saved');
+  });
+
+  // Clear follow-up date
+  document.getElementById('btn-clear-followup')?.addEventListener('click', async () => {
+    await Leads.save({ ...lead, followUpDate: '' });
+    const updated = await Leads.get(lead.id);
+    await leadDetailModal(updated);
+    attachLeadDetailHandlers(updated);
+  });
+
+  // Save trial date
+  document.getElementById('btn-save-trial')?.addEventListener('click', async () => {
+    const date = document.getElementById('trial-date-input').value;
+    await Leads.save({ ...lead, trialDate: date });
+    const updated = await Leads.get(lead.id);
+    await leadDetailModal(updated);
+    attachLeadDetailHandlers(updated);
+    showToast('Trial date saved');
+  });
+
+  // Clear trial date
+  document.getElementById('btn-clear-trial')?.addEventListener('click', async () => {
+    await Leads.save({ ...lead, trialDate: '' });
+    const updated = await Leads.get(lead.id);
+    await leadDetailModal(updated);
+    attachLeadDetailHandlers(updated);
+  });
+
+  // Delete activity
+  document.querySelectorAll('.btn-delete-activity').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await LeadActivities.delete(Number(btn.dataset.id));
+      const updated = await Leads.get(lead.id);
+      await leadDetailModal(updated);
+      attachLeadDetailHandlers(updated);
+    });
+  });
+
+  // Edit button → swap to edit form
+  document.getElementById('btn-lead-edit')?.addEventListener('click', async () => {
+    const fresh = await Leads.get(lead.id);
+    if (fresh) { leadFormModal(fresh); attachLeadFormHandlers(fresh.id); }
+  });
+
+  // Delete button
+  document.getElementById('btn-lead-delete')?.addEventListener('click', async () => {
+    if (confirm(`Delete ${lead.name}? This cannot be undone.`)) {
+      await Leads.delete(lead.id);
+      closeModal();
+      render();
+    }
+  });
+
+  document.getElementById('btn-modal-close')?.addEventListener('click', () => {
+    closeModal();
+    if (currentPage === 'leads' || currentPage === 'dashboard') render();
+  });
+}
+
+function attachLeadFormHandlers(existingId) {
+  document.getElementById('lead-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const record = {
+      ...(existingId ? { id: existingId } : {}),
+      name:         fd.get('name'),
+      phone:        fd.get('phone'),
+      email:        fd.get('email'),
+      source:       fd.get('source'),
+      status:       fd.get('status'),
+      followUpDate: fd.get('followUpDate'),
+      trialDate:    fd.get('trialDate'),
+      notes:        fd.get('notes'),
+    };
+    await Leads.save(record);
+    closeModal();
+    render();
+  });
+
+  document.getElementById('btn-delete-lead')?.addEventListener('click', async (e) => {
+    if (confirm('Delete this lead?')) {
+      await Leads.delete(Number(e.target.dataset.id));
+      closeModal();
+      render();
+    }
+  });
+
+  document.getElementById('btn-convert-lead')?.addEventListener('click', async (e) => {
+    const lead = await Leads.get(Number(e.target.dataset.id));
+    if (!lead) return;
+    convertLeadModal(lead);
+    document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+    document.getElementById('convert-form').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const fd = new FormData(ev.target);
+      await Members.save({
+        name:           fd.get('name'),
+        phone:          fd.get('phone'),
+        email:          fd.get('email'),
+        membershipType: fd.get('membershipType'),
+        status:         'active',
+        joinedDate:     fd.get('joinedDate'),
+      });
+      await Leads.save({ ...lead, status: 'converted' });
+      closeModal();
+      render();
+    });
+  });
+
+  document.getElementById('btn-modal-close')?.addEventListener('click', closeModal);
+}
+
+
+</script>
+</body>
+</html>
